@@ -1,0 +1,140 @@
+
+<!-- table zwave_devices search -->
+<div>
+ [ <a href="#" onClick="$('#api_settings').toggle();return false;"><#LANG_SETUP#></a> ]
+</div>
+<div style="display:none" id='api_settings'>
+&nbsp;
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+<fieldset>
+<div class="form-group">
+ <label class="control-label"[#if ERR_HTTPS_API_URL#] style="color:red;font-weight:bold"[#endif#]>
+ HTTPS API URL:
+ (*)
+ </label>
+ <div class="controls"><input type="text" name="https_api_url" value="[#HTTPS_API_URL#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label"[#if ERR_WSS_API_URL#] style="color:red;font-weight:bold"[#endif#]>
+ WSS API URL:
+ (*)
+ </label>
+ <div class="controls"><input type="text" name="wss_api_url" value="[#WSS_API_URL#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label"[#if ERR_POLL_PERIOD#] style="color:red;font-weight:bold"[#endif#]>
+ HTTPS POLLING PERIOD:
+ (*)
+ </label>
+ <div class="controls"><input type="text" name="poll_period" value="[#POLL_PERIOD#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label"[#if ERR_TOKEN#] style="color:red;font-weight:bold"[#endif#]>
+ TOKEN:
+ (*)
+ </label>
+ <div class="controls"><input type="text" name="token" value="[#TOKEN#]" class="input"></div>
+</div>
+<blockquote class="blockquote">
+Служебная информация
+<div class="form-group">
+ <label class="control-label">
+ ApiKey:
+ </label>
+ <div class="controls"><input type="text" name="apikey" value="[#APIKEY#]" class="input"></div>
+</div>
+</blockquote>
+<!--div class="form-group">
+ <label class="control-label">
+ version:
+ </label>
+ <div class="controls"><input type="text" name="version" value="[#VERSION#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label">
+ apkversion:
+ </label>
+ <div class="controls"><input type="text" name="apkversion" value="[#APKVERSION#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label">
+ os:
+ </label>
+ <div class="controls"><input type="text" name="os" value="[#OS#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label">
+ PhoneModel:
+ </label>
+ <div class="controls"><input type="text" name="model" value="[#MODEL#]" class="input"></div>
+</div>
+<div class="form-group">
+ <label class="control-label">
+ romVersion:
+ </label>
+ <div class="controls"><input type="text" name="romVersion" value="[#ROMVERSION#]" class="input"></div>
+</div-->
+
+<div class="form-actions">
+<button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_UPDATE#></button>
+<input type="hidden" name="view_mode" value="update_settings">
+<input type="hidden" name="mode" value="update">
+</div>
+</fieldset>
+</form>
+</div>
+ <!-- action usual -->
+ [#if DATA_SOURCE="dev_sonoff_devices" || DATA_SOURCE=""#]
+ <!-- table dev_sonoff_devices search -->
+ [#if VIEW_MODE="search_dev_sonoff_devices" || VIEW_MODE=""#]
+  [#inc dev_sonoff_devices_search_admin.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_devices search -->
+ <!-- table dev_sonoff_devices edit -->
+ [#if VIEW_MODE="edit_dev_sonoff_devices"#]
+   [#if ID!=""#]
+   [#if TITLE!=""#]<h4>[#TITLE#]</h4>[#endif TITLE#]
+<ul class="nav nav-tabs">
+  <li[#if TAB=""#] class="active"[#endif#]>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#VIEW_MODE#>&id=<#ID#>&tab="><#LANG_GENERAL#></a>
+  </li>
+  <li[#if TAB="data"#] class="active"[#endif#]>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=<#VIEW_MODE#>&id=<#ID#>&tab=data">&#060#LANG_DATA#&#062</a>
+  </li>
+</ul>
+&nbsp;<br/>
+   [#endif ID#]
+   [#if TAB=""#]
+    [#inc dev_sonoff_devices_edit_default.html#]
+   [#endif TAB#]
+   [#if TAB="data"#]
+    [#inc dev_sonoff_devices_edit_data.html#]
+   [#endif TAB#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_devices edit -->
+ <!-- table dev_sonoff_devices view --> 
+ [#if VIEW_MODE="view_dev_sonoff_devices"#]
+   [#if TAB=""#]
+    [#inc dev_sonoff_devices_view_default.html#]
+   [#endif TAB#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_devices view -->
+ [#endif DATA_SOURCE#]
+ <!-- action usual -->
+ [#if DATA_SOURCE="dev_sonoff_data"#]
+ <!-- table dev_sonoff_data search -->
+ [#if VIEW_MODE="search_dev_sonoff_data" || VIEW_MODE=""#]
+  [#inc dev_sonoff_data_search_admin.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_data search -->
+ <!-- table dev_sonoff_data edit -->
+ [#if VIEW_MODE="edit_dev_sonoff_data"#]
+   [#inc dev_sonoff_data_edit.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_data edit -->
+ <!-- table dev_sonoff_data view --> 
+ [#if VIEW_MODE="view_dev_sonoff_data"#]
+   [#inc dev_sonoff_data_view.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_sonoff_data view -->
+ [#endif DATA_SOURCE#]
