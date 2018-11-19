@@ -4,6 +4,8 @@ $host='https://'.$this->config['HTTPS_API_URL'].':8080/api/user/device';
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $host);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
  'GET /api/user/device HTTP/1.1',
  'Authorization: Bearer '.$this->config['TOKEN']

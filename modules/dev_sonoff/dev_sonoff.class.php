@@ -249,31 +249,31 @@ function usual(&$out) {
 	$url='wss://'.$this->config['WSS_API_URL'].':8080/api/ws';
 	return $url;
  }
+ function wssGreatings($sonoffws) {
+	$this->getConfig();
+	
+	$payload['action']='userOnline';
+	$payload['userAgent']='app';
+	$payload['version']=6;
+	$payload['nonce']=base64_encode($sonoffws->generateKey(8));
+	$payload['apkVesrion']="1.8";
+	$payload['os']='ios';
+	$payload['at']=$this->config['TOKEN'];
+	$payload['apikey']=$this->config['APIKEY'];
+	$payload['ts']=time();
+	$payload['model']='iPhone10,6';
+	$payload['romVersion']='11.1.2';
+	$payload['sequence']=time()*1000;	
+	$jsonstring=json_encode($payload);
+	if($sonoffws->isConnected()) {
+		try {
+            $sonoffws->send($jsonstring);
+        } catch (BadOpcodeException $e) {
+            echo 'Couldn`t sent: ' . $e->getMessage();
+        }
+	}
+ }
 
-	    public function _generateRandomString($length = 10, $addSpaces = true, $addNumbers = true)
-        {  
-                $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"ยง$%&/()=[]{}';
-                $useChars = array();
-                // select some random chars:    
-                for($i = 0; $i < $length; $i++)
-                {
-                        $useChars[] = $characters[mt_rand(0, strlen($characters)-1)];
-                }
-                // add spaces and numbers:
-                if($addSpaces === true)
-                {
-                        array_push($useChars, ' ', ' ', ' ', ' ', ' ', ' ');
-                }
-                if($addNumbers === true)
-                {
-                        array_push($useChars, rand(0,9), rand(0,9), rand(0,9));
-                }
-                shuffle($useChars);
-                $randomString = trim(implode('', $useChars));
-                $randomString = substr($randomString, 0, $length);
-                return $randomString;
-        } 
- 
 /**
 * Install
 *
