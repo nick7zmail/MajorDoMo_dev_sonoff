@@ -31,6 +31,7 @@ foreach($decoded_res as $device) {
 		$rec['ID']=$findrec['ID'];
 		SQLUpdate('dev_sonoff_devices', $rec);
 	} else {
+		$rec['ID']='';
 		$rec['ID']=SQLInsert('dev_sonoff_devices', $rec);
 	}
 	$id=$rec['ID'];
@@ -41,6 +42,7 @@ foreach($decoded_res as $device) {
 		$rec_params['TITLE']=$param;
 		$rec_params['VALUE']=$val;
 		$need_insert=true;
+		$rec_params['ID']='';
 		foreach ($findparams as $findparam) {
 			if($rec_params['TITLE']==$findparam['TITLE']) {
 				$need_insert=false;
