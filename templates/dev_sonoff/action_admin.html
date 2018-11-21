@@ -35,6 +35,20 @@
  </label>
  <div class="controls"><input type="text" name="token" value="[#TOKEN#]" class="input"></div>
 </div>
+<div class="form-group">
+ <label class="control-label">
+ Debug mode:
+ </label>
+	<div class="btn-group controls" style="margin-left:0px" data-toggle="buttons">
+		<label class="btn [#if DEBUG=="true"#]btn-primary[#else#]btn-default[#endif#]">
+			<input type="radio" name="debug" value="true" [#if DEBUG=="true"#] checked[#endif#]> ON
+		</label>
+		<label class="btn [#if DEBUG==""#]btn-primary[#else#]btn-default[#endif#]">
+			<input type="radio" name="debug" value="" [#if DEBUG==""#] checked[#endif#]> OFF
+		</label>
+	</div>
+</div>
+[#if DEBUG=="true"#]
 <blockquote class="blockquote">
 Служебная информация
 <div class="form-group">
@@ -43,8 +57,8 @@
  </label>
  <div class="controls"><input type="text" name="apikey" value="[#APIKEY#]" class="input"></div>
 </div>
-</blockquote>
-<!--div class="form-group">
+
+<div class="form-group">
  <label class="control-label">
  version:
  </label>
@@ -73,8 +87,16 @@
  romVersion:
  </label>
  <div class="controls"><input type="text" name="romVersion" value="[#ROMVERSION#]" class="input"></div>
-</div-->
-
+</div>
+</blockquote>
+[#else#]
+<input type="text" name="apikey" value="[#APIKEY#]" class="input" hidden>
+<input type="text" name="version" value="[#VERSION#]" class="input" hidden>
+<input type="text" name="apkversion" value="[#APKVERSION#]" class="input" hidden>
+<input type="text" name="os" value="[#OS#]" class="input" hidden>
+<input type="text" name="model" value="[#MODEL#]" class="input" hidden>
+<input type="text" name="romVersion" value="[#ROMVERSION#]" class="input" hidden>
+[#endif DEBUG#]
 <div class="form-actions">
 <button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_UPDATE#></button>
 <input type="hidden" name="view_mode" value="update_settings">

@@ -12,6 +12,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 )); 
 $response = curl_exec($ch);
 curl_close($ch);
+if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
 $decoded_res=json_decode($response, TRUE);
 
 foreach($decoded_res as $device) {
@@ -45,7 +46,7 @@ foreach($decoded_res as $device) {
 				$need_insert=false;
 				$rec_params['ID']=$findparam['ID'];
 				if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-					sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $val);
+					sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
 				}
 			}
 		}

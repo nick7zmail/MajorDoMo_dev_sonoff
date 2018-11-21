@@ -9,6 +9,7 @@
 //
 //
 class dev_sonoff extends module {
+	private $sonoffws;
 /**
 * dev_sonoff
 *
@@ -16,6 +17,7 @@ class dev_sonoff extends module {
 *
 * @access private
 */
+
 function __construct() {
   $this->name="dev_sonoff";
   $this->title="Sonoff";
@@ -129,16 +131,27 @@ function admin(&$out) {
  $out['WSS_API_URL']=$this->config['WSS_API_URL'];
  $out['TOKEN']=$this->config['TOKEN'];
  $out['POLL_PERIOD']=$this->config['POLL_PERIOD'];
+ $out['DEBUG']=$this->config['DEBUG'];
  $out['APIKEY']=$this->config['APIKEY'];
- 
+ $out['VERSION']=$this->config['VERSION'];
+ $out['APKVERSION']=$this->config['APKVERSION'];
+ $out['OS']=$this->config['OS'];
+ $out['MODEL']=$this->config['MODEL'];
+ $out['ROMVERSION']=$this->config['ROMVERSION'];
+
  if ($this->view_mode=='update_settings') {
    $this->config['HTTPS_API_URL']=gr('https_api_url');
    $this->config['WSS_API_URL']=gr('wss_api_url');
    $this->config['TOKEN']=gr('token');
    $this->config['POLL_PERIOD']=intval(gr('poll_period'));
+   $this->config['DEBUG']=gr('debug');
+   $this->config['VERSION']=gr('version');
+   $this->config['APKVERSION']=gr('apkversion');
+   $this->config['MODEL']=gr('model');
+   $this->config['ROMVERSION']=gr('romVersion');
+
    if(!intval(gr('poll_period'))) $out['ERR_POLL_PERIOD']=1;
 
-   
    $this->saveConfig();
    $this->dev_sonoff_devices_cloudscan();
    $this->redirect("?");
@@ -233,11 +246,38 @@ function usual(&$out) {
  function propertySetHandle($object, $property, $value) {
   $this->getConfig();
    $table='dev_sonoff_data';
-   $properties=SQLSelect("SELECT ID FROM $table WHERE LINKED_OBJECT LIKE '".DBSafe($object)."' AND LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+   $properties=SQLSelect("SELECT * FROM $table WHERE LINKED_OBJECT LIKE '".DBSafe($object)."' AND LINKED_PROPERTY LIKE '".DBSafe($property)."'");
    $total=count($properties);
    if ($total) {
     for($i=0;$i<$total;$i++) {
-     //to-do
+			$dev_id=$properties[$i]['DEVICE_ID'];
+			$device=SQLSelectOne("SELECT DEVICEID FROM dev_sonoff_devices WHERE ID='$dev_id'");
+			$param=$properties[$i]['TITLE'];
+			
+			$payload['action']='update';
+			$payload['userAgent']='app';
+			$payload['apikey']=$this->config['APIKEY'];
+			$payload['deviceid']=$device['DEVICEID'];
+			$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
+			$payload['sequence']=time()*1000;	
+			$jsonstring=json_encode($payload);
+			if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+			include_once("./lib/websockets/sonoffws.class.php");
+			$wssurl=$this->getWssUrl();
+			$sonoffws = new SonoffWS($wssurl, $config);
+			$sonoffws->socketUrl=$wssurl;
+			$sonoffws->connect();
+			$this->sonoffws=$sonoffws;
+			$this->wssGreatings();
+			if($this->sonoffws->isConnected()) {
+				try {
+					$this->sonoffws->send($jsonstring);
+				} catch (BadOpcodeException $e) {
+					echo 'Couldn`t sent: ' . $e->getMessage();
+				}
+			}	
+			$recv=$this->sonoffws->receive();
+			if($this->config['DEBUG']) debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
     }
    }
  }
@@ -249,13 +289,17 @@ function usual(&$out) {
 	$url='wss://'.$this->config['WSS_API_URL'].':8080/api/ws';
 	return $url;
  }
- function wssGreatings($sonoffws) {
+ function wssInit($sonoffws) {
+	 $this->sonoffws=$sonoffws;
+	 $this->wssGreatings();
+ }
+  
+ function wssGreatings() {
 	$this->getConfig();
-	
 	$payload['action']='userOnline';
 	$payload['userAgent']='app';
 	$payload['version']=6;
-	$payload['nonce']=base64_encode($sonoffws->generateKey(8));
+	$payload['nonce']=base64_encode($this->sonoffws->generateKey(8));
 	$payload['apkVesrion']="1.8";
 	$payload['os']='ios';
 	$payload['at']=$this->config['TOKEN'];
@@ -265,15 +309,33 @@ function usual(&$out) {
 	$payload['romVersion']='11.1.2';
 	$payload['sequence']=time()*1000;	
 	$jsonstring=json_encode($payload);
-	if($sonoffws->isConnected()) {
+	if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+	if($this->sonoffws->isConnected()) {
 		try {
-            $sonoffws->send($jsonstring);
+            $this->sonoffws->send($jsonstring);
         } catch (BadOpcodeException $e) {
             echo 'Couldn`t sent: ' . $e->getMessage();
         }
 	}
+	$recv=$this->sonoffws->receive();
+	if($this->config['DEBUG']) debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
  }
-
+ 
+ function wssRecv($recv) {
+	 debmes($recv);
+ }
+ function metricsModify($param, $val, $out) {
+	if($out=='to_device') { 
+		if($param=='switch' || $param=='sledOnline') {
+			$val=($val)? 'on' : 'off';
+		} 
+	} elseif($out=='from_device') {
+		if($param=='switch' || $param=='sledOnline') {
+			$val=($val=='on')? 1 : 0;
+		} 
+	}
+	return $val;
+ } 
 /**
 * Install
 *
@@ -283,6 +345,13 @@ function usual(&$out) {
 */
  function install($data='') {
   parent::install();
+  $this->getConfig();
+  $this->config['VERSION']=6;
+  $this->config['APKVERSION']='1.8';
+  $this->config['OS']='ios';
+  $this->config['MODEL']='iPhone10,6';
+  $this->config['ROMVERSION']='11.1.2';
+  $this->saveConfig();
  }
 /**
 * Uninstall

@@ -3,7 +3,7 @@ chdir(dirname(__FILE__) . '/../');
 include_once("./config.php");
 include_once("./lib/loader.php");
 include_once("./lib/threads.php");
-//include_once("./lib/websockets/sonoffws.class.php");
+include_once("./lib/websockets/sonoffws.class.php");
 set_time_limit(0);
 // connecting to database
 $db = new mysql(DB_HOST, '', DB_USER, DB_PASSWORD, DB_NAME);
@@ -21,7 +21,7 @@ $latest_check=0;
 $checkEvery=$dev_sonoff_module->config['POLL_PERIOD']; //polling devices time (http)
 //websockets
 $wssurl=$dev_sonoff_module->getWssUrl();
-//$sonoffws = new SonoffWS($wssurl, $config);
+$sonoffws = new SonoffWS($wssurl, $config);
 
 while (1)
 {
@@ -32,20 +32,24 @@ while (1)
     echo date('Y-m-d H:i:s').' Polling devices...';
     $dev_sonoff_module->processCycle();
    }
-   /*
+ /*  
    //websockets works
 	if($sonoffws->isConnected()) {
 		//выполняем если подключено
-		//$dev_sonoff_module->wssSend();
+		//if($sonoffws->receive()) {
+		//	$recv=$sonoffws->receive();
+		//	$dev_sonoff_module->wssRecv($recv);
+		//}
 	} else {
 		//переподключаемся
+		$sonoffws = new SonoffWS($wssurl, $config);
 		$sonoffws->socketUrl=$wssurl;
 		$sonoffws->connect();
 		if($sonoffws->isConnected()) {
-			$dev_sonoff_module->wssGreatings($sonoffws);
+			$dev_sonoff_module->wssInit($sonoffws);
 		}
-	}*/
-
+	}
+*/
 
    if (file_exists('./reboot') || IsSet($_GET['onetime']))
    {
