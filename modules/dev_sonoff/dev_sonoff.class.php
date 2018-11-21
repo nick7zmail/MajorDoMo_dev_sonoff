@@ -299,7 +299,7 @@ function usual(&$out) {
 	$payload['action']='userOnline';
 	$payload['userAgent']='app';
 	$payload['version']=6;
-	$payload['nonce']=base64_encode($this->sonoffws->generateKey(8));
+	$payload['nonce']=$this->sonoffws->generateKey(8);
 	$payload['apkVesrion']="1.8";
 	$payload['os']='ios';
 	$payload['at']=$this->config['TOKEN'];
