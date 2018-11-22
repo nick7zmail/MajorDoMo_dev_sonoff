@@ -1,8 +1,5 @@
 
 <!-- table zwave_devices search -->
-<div>
- [ <a href="#" onClick="$('#api_settings').toggle();return false;"><#LANG_SETUP#></a> ]
-</div>
 <div style="display:none" id='api_settings'>
 &nbsp;
 <form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
@@ -41,10 +38,10 @@
  </label>
 	<div class="btn-group controls" style="margin-left:0px" data-toggle="buttons">
 		<label class="btn [#if DEBUG=="true"#]btn-primary[#else#]btn-default[#endif#]">
-			<input type="radio" name="debug" value="true" [#if DEBUG=="true"#] checked[#endif#]> ON
+			<input type="radio" name="debug" value="true" [#if DEBUG=="true"#] checked[#endif#]> <#LANG_ON#>
 		</label>
 		<label class="btn [#if DEBUG==""#]btn-primary[#else#]btn-default[#endif#]">
-			<input type="radio" name="debug" value="" [#if DEBUG==""#] checked[#endif#]> OFF
+			<input type="radio" name="debug" value="" [#if DEBUG==""#] checked[#endif#]> <#LANG_OFF#>
 		</label>
 	</div>
 </div>

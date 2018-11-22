@@ -1,6 +1,7 @@
 
 <!-- table dev_sonoff_devices search -->
 <p>
+<a href="#" class="btn btn-primary" onClick="$('#api_settings').toggle();return false;"><i class="glyphicon glyphicon-cog"></i></a>
 <a href="?view_mode=edit_dev_sonoff_devices&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> <#LANG_ADD#></a>
 </p>
 <table width=100% border=0><tr>
@@ -25,56 +26,51 @@
 <form action="?" method="post" name="frmList_dev_sonoff_devices" style="padding:0px" class="form">
 <table  align=center class="table table-striped">
 <tbody>
+<tr>
+	<th></th>
+	<th><#LANG_TITLE#></th>
+	<th>Производитель</th>
+	<th>Модель</th>
+	<th><#LANG_ONLINE#></th>
+	<th><#LANG_UPDATED#></th>
+	<th><#LANG_ACTIONS#></th>
+</tr>
 [#begin RESULT#]
 <tr>
- <td
-  >
+<td style="vertical-align:middle; width:52px">[#if UIID=="6" || UIID=="14" || UIID=="18" || UIID=="28" #]<img class="img-circle" src="/img/sonoff/[#UIID#].jpg" alt="Device Logo" width="34" height="34">[#else#]
+<img class="img-circle" src="/img/sonoff/unknown.png" alt="Device Logo" width="34" height="34">
+[#endif UIID#]</td>
+ <td>
   <b>
    [#TITLE#]
   </a></b>
  </td>
- <td
-   >
-  [#if TYPE!=""#]
-   [#TYPE#]
-  [#else#]
-   &nbsp;
-  [#endif#]
- </td>
- <td
-   >
-  [#if DEVICEID!=""#]
-   [#DEVICEID#]
-  [#else#]
-   &nbsp;
-  [#endif#]
- </td>
- <td
-   >
+ 
+ <td>
   [#if BRANDNAME!=""#]
    [#BRANDNAME#]
   [#else#]
    &nbsp;
   [#endif#]
  </td>
- <td
-   >
+ 
+ <td>
   [#if PRODUCTMODEL!=""#]
    [#PRODUCTMODEL#]
   [#else#]
    &nbsp;
   [#endif#]
  </td>
- <td
-   >
-  [#if UIID!=""#]
-   [#UIID#]
+ 
+ <td>
+  [#if ONLINE!=""#]
+   <span class="label label-success"><#LANG_ONLINE#></span>
   [#else#]
-   &nbsp;
+   <span class="label label-danger"><#LANG_OFFLINE#></span>
   [#endif#]
- </td>
- <td
-   >
+ </td> 
+ 
+ <td>
   [#if UPDATED!=""#]
    [#UPDATED#]
   [#else#]
@@ -85,7 +81,8 @@
   <div>
   [#if "<#ACTION#>"=="admin"#]
    <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]" class="btn btn-default" title="Edit"><i class="glyphicon glyphicon-pencil"></i></a>
-    <a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_dev_sonoff_devices&id=[#ID#]" onClick="return confirm('Are you sure? Please confirm.')" class="btn btn-default" title="Delete"><i class="glyphicon glyphicon-remove"></i></a>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]&tab=data" class="btn btn-default" title="Data"><i class="glyphicon glyphicon-th-list"></i></a>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_dev_sonoff_devices&id=[#ID#]" onClick="return confirm('Are you sure? Please confirm.')" class="btn btn-default" title="Delete"><i class="glyphicon glyphicon-remove"></i></a>
   [#endif ACTION#]
   </div>
  </td>
