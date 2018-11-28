@@ -526,7 +526,7 @@ class SonoffWS implements CommonsContract
      * @return string   the 16 character length key
      * @throws \Exception
      */
-    public function generateKey($len = 16): string
+    public function generateKey($len = 16, $encode = true): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$&/()=[]{}0123456789';
         $key = '';
@@ -534,8 +534,11 @@ class SonoffWS implements CommonsContract
         for ($i = 0; $i < $len; $i++) {
             $key .= $chars[random_int(0, $chLen - 1)];
         }
-
-        return base64_encode($key);
+		if($encode) {
+			return base64_encode($key);
+		} else {
+			return $key;
+		}
     }
 	
 	public function getFragmentSize(): int

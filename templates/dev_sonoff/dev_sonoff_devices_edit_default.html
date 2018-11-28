@@ -19,40 +19,45 @@
  </label>
  <div class="col-lg-9"><input id="title" name="title" value="[#TITLE#]" type="text" class="form-control"></div>
 </div>
-<!-- TYPE (varchar) -->
-<div class="form-group[#if ERR_TYPE#] has-error[#endif#]">
- <label for="type" class="col-lg-3 control-label">
- TYPE:
- </label>
- <div class="col-lg-9"><input id="type" name="type" value="[#TYPE#]" type="text" class="form-control"></div>
-</div>
 <!-- DEVICEID (varchar) -->
 <div class="form-group[#if ERR_DEVICEID#] has-error[#endif#]">
  <label for="deviceid" class="col-lg-3 control-label">
  DEVICEID:
  </label>
- <div class="col-lg-9"><input id="deviceid" name="deviceid" value="[#DEVICEID#]" type="text" class="form-control"></div>
+ <div class="col-lg-9">
+	<input id="deviceid" name="deviceid" value="[#DEVICEID#]" type="hidden" class="form-control">
+	<input value="[#DEVICEID#]" type="text" class="form-control" disabled>	
+</div>
 </div>
 <!-- BRANDNAME (varchar) -->
 <div class="form-group[#if ERR_BRANDNAME#] has-error[#endif#]">
  <label for="brandname" class="col-lg-3 control-label">
  BRANDNAME:
  </label>
- <div class="col-lg-9"><input id="brandname" name="brandname" value="[#BRANDNAME#]" type="text" class="form-control"></div>
+ <div class="col-lg-9">
+	<input id="brandname" name="brandname" value="[#BRANDNAME#]" type="hidden" class="form-control">
+	<input value="[#BRANDNAME#]" type="text" class="form-control" disabled>
+</div>
 </div>
 <!-- PRODUCTMODEL (varchar) -->
 <div class="form-group[#if ERR_PRODUCTMODEL#] has-error[#endif#]">
  <label for="productmodel" class="col-lg-3 control-label">
  PRODUCTMODEL:
  </label>
- <div class="col-lg-9"><input id="productmodel" name="productmodel" value="[#PRODUCTMODEL#]" type="text" class="form-control"></div>
+ <div class="col-lg-9">
+	<input id="productmodel" name="productmodel" value="[#PRODUCTMODEL#]" type="hidden" class="form-control">
+	<input value="[#PRODUCTMODEL#]" type="text" class="form-control" disabled>
+</div>
 </div>
 <!-- UIID (varchar) -->
 <div class="form-group[#if ERR_UIID#] has-error[#endif#]">
  <label for="uiid" class="col-lg-3 control-label">
  UIID:
  </label>
- <div class="col-lg-9"><input id="uiid" name="uiid" value="[#UIID#]" type="text" class="form-control"></div>
+ <div class="col-lg-9">
+	<input id="uiid" name="uiid" value="[#UIID#]" type="hidden" class="form-control">
+	<input value="[#UIID#]" type="text" class="form-control" disabled>
+</div>
 </div>
 <!-- UIID (varchar) -->
 <div class="form-group[#if ERR_UIID#] has-error[#endif#]">

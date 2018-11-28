@@ -130,6 +130,8 @@ function admin(&$out) {
  $out['HTTPS_API_URL']=$this->config['HTTPS_API_URL'];
  $out['WSS_API_URL']=$this->config['WSS_API_URL'];
  $out['TOKEN']=$this->config['TOKEN'];
+ $out['EMAIL']=$this->config['EMAIL'];
+ $out['PASS']=$this->config['PASS'];
  $out['POLL_PERIOD']=$this->config['POLL_PERIOD'];
  $out['DEBUG']=$this->config['DEBUG'];
  $out['APIKEY']=$this->config['APIKEY'];
@@ -140,9 +142,18 @@ function admin(&$out) {
  $out['ROMVERSION']=$this->config['ROMVERSION'];
 
  if ($this->view_mode=='update_settings') {
+   if(gr('login')) {
+	   $at=$this->loginAuth(gr('login'), gr('pass'));
+   }
+   $this->config['EMAIL']=gr('login');
+   $this->config['PASS']=gr('pass');
    $this->config['HTTPS_API_URL']=gr('https_api_url');
    $this->config['WSS_API_URL']=gr('wss_api_url');
-   $this->config['TOKEN']=gr('token');
+   if($at) {
+	   $this->config['TOKEN']=$at;
+   } else {
+	   $this->config['TOKEN']=gr('token');
+   }
    $this->config['POLL_PERIOD']=intval(gr('poll_period'));
    $this->config['DEBUG']=gr('debug');
    $this->config['VERSION']=gr('version');
@@ -262,28 +273,46 @@ function usual(&$out) {
 			$payload['sequence']=time()*1000;	
 			$jsonstring=json_encode($payload);
 			if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
-			include_once("./lib/websockets/sonoffws.class.php");
-			$wssurl=$this->getWssUrl();
-			$sonoffws = new SonoffWS($wssurl, $config);
-			$sonoffws->socketUrl=$wssurl;
-			$sonoffws->connect();
-			$this->sonoffws=$sonoffws;
-			$this->wssGreatings();
-			if($this->sonoffws->isConnected()) {
-				try {
-					$this->sonoffws->send($jsonstring);
-				} catch (BadOpcodeException $e) {
-					echo 'Couldn`t sent: ' . $e->getMessage();
+			if(isset($this->sonoffws)) {
+				if($this->sonoffws->isConnected()) {
+					try {
+						$this->sonoffws->send($jsonstring);
+					} catch (BadOpcodeException $e) {
+						echo 'Couldn`t sent: ' . $e->getMessage();
+					}
+				}				
+			} else {
+				include_once("./lib/websockets/sonoffws.class.php");
+				$wssurl=$this->getWssUrl();
+				$sonoffws = new SonoffWS($wssurl, $config);
+				$sonoffws->socketUrl=$wssurl;
+				$sonoffws->connect();
+				$this->sonoffws=$sonoffws;
+				$this->wssGreatings();
+				if($this->sonoffws->isConnected()) {
+					try {
+						$this->sonoffws->send($jsonstring);
+					} catch (BadOpcodeException $e) {
+						echo 'Couldn`t sent: ' . $e->getMessage();
+					}
 				}
-			}	
-			$recv=$this->sonoffws->receive();
-			if($this->config['DEBUG']) debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
+			}
+			
+			
+			if($this->config['DEBUG']) {
+				$recv=$this->sonoffws->receive();
+				debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
+			}
+			$sonoffws->close();
     }
    }
  }
  function processCycle() {
  $this->dev_sonoff_devices_cloudscan();
  }
+ 
+ 
+ 
  function getWssUrl() {
 	$this->getConfig();
 	$url='wss://'.$this->config['WSS_API_URL'].':8080/api/ws';
@@ -299,14 +328,14 @@ function usual(&$out) {
 	$payload['action']='userOnline';
 	$payload['userAgent']='app';
 	$payload['version']=6;
-	$payload['nonce']=$this->sonoffws->generateKey(8);
-	$payload['apkVesrion']="1.8";
-	$payload['os']='ios';
+	$payload['nonce']=$this->sonoffws->generateKey(8, false);
+	$payload['apkVesrion']=$this->config['APKVERSION'];
+	$payload['os']=$this->config['OS'];
 	$payload['at']=$this->config['TOKEN'];
 	$payload['apikey']=$this->config['APIKEY'];
 	$payload['ts']=time();
-	$payload['model']='iPhone10,6';
-	$payload['romVersion']='11.1.2';
+	$payload['model']= $this->config['MODEL'];
+	$payload['romVersion']=$this->config['ROMVERSION'];
 	$payload['sequence']=time()*1000;	
 	$jsonstring=json_encode($payload);
 	if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
@@ -317,13 +346,13 @@ function usual(&$out) {
             echo 'Couldn`t sent: ' . $e->getMessage();
         }
 	}
-	$recv=$this->sonoffws->receive();
-	if($this->config['DEBUG']) debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
+	
+	if($this->config['DEBUG']) {
+		$recv=$this->sonoffws->receive();
+		debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
+	}
  }
  
- function wssRecv($recv) {
-	 debmes($recv);
- }
  function metricsModify($param, $val, $out) {
 	if($out=='to_device') { 
 		if($param=='switch' || $param=='sledOnline') {
@@ -335,7 +364,50 @@ function usual(&$out) {
 		} 
 	}
 	return $val;
- } 
+ }
+ 
+ function deviceRename($device) {
+	$devid=$device['DEVICEID'];
+	$this->getConfig();
+	$host='https://'.$this->config['HTTPS_API_URL'].":8080/api/user/device/$devid";
+	$payload['group']=' ';
+	$payload['deviceid']=$devid;
+	$payload['name']=$device['TITLE'];
+	$payload['version']=$this->config['VERSION'];
+	$payload['ts']=time();
+	$payload['os']=$this->config['OS'];
+	$payload['model']= $this->config['MODEL'];
+	$payload['romVersion']=$this->config['ROMVERSION'];
+	$payload['apkVesrion']=$this->config['APKVERSION'];
+	
+	include_once("./lib/websockets/sonoffws.class.php");
+	$sonoffws = new SonoffWS($wssurl, $config);
+	$payload['nonce']=$sonoffws->generateKey(8, false);
+	$jsonstring=json_encode($payload);
+	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $host);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+	 "POST /api/user/device/$devid HTTP/1.1",
+	 'Authorization: Bearer '.$this->config['TOKEN'],
+	 'Content-Type: application/json',  
+	 'Content-Length: ' . strlen($jsonstring)
+	));
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
+	$response = curl_exec($ch);
+	curl_close($ch);
+	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
+	
+ }
+ 
+ function loginAuth($login, $pass) {
+	$this->getConfig();
+
+ }
 /**
 * Install
 *
@@ -380,7 +452,6 @@ dev_sonoff_data -
   $data = <<<EOD
  dev_sonoff_devices: ID int(10) unsigned NOT NULL auto_increment
  dev_sonoff_devices: TITLE varchar(100) NOT NULL DEFAULT ''
- dev_sonoff_devices: TYPE varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: DEVICEID varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: BRANDNAME varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: PRODUCTMODEL varchar(255) NOT NULL DEFAULT ''

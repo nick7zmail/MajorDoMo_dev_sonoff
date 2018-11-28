@@ -12,13 +12,15 @@
   // step: default
   if ($this->tab=='') {
 
-   $rec['TITLE']=gr('title');
-   if ($rec['TITLE']=='') {
-    $out['ERR_TITLE']=1;
-    $ok=0;
-   }
-  //updating 'TYPE' (varchar)
-   $rec['TYPE']=gr('type');
+	if($rec['TITLE']!=gr('title')) {
+	   $rec['TITLE']=gr('title');
+	   $this->deviceRename($rec);
+	} 
+	
+	if ($rec['TITLE']=='') {
+		$out['ERR_TITLE']=1;
+		$ok=0;
+	}
   //updating 'DEVICEID' (varchar)
    $rec['DEVICEID']=gr('deviceid');
   //updating 'BRANDNAME' (varchar)

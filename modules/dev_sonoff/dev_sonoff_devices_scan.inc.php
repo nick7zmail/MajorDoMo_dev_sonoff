@@ -8,56 +8,57 @@ curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
  'GET /api/user/device HTTP/1.1',
- 'Authorization: Bearer '.$this->config['TOKEN']
+ 'Authorization: Bearer '.$this->config['TOKEN'],
+ 'Content-Type: application/json'
 )); 
 $response = curl_exec($ch);
 curl_close($ch);
 if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
 $decoded_res=json_decode($response, TRUE);
-
-foreach($decoded_res as $device) {
-	$this->config['APIKEY']=$device['apikey'];
-	$this->saveConfig();
-	$rec['TITLE']=$device['name'];
-	$rec['TYPE']=$device['type'];
-	$rec['DEVICEID']=$device['deviceid'];
-	$id=$device['deviceid'];
-	$rec['BRANDNAME']=$device['brandName'];
-	$rec['PRODUCTMODEL']=$device['productModel'];
-	$rec['UIID']=$device['uiid'];
-	$findrec=SQLSelectOne("SELECT ID FROM dev_sonoff_devices WHERE DEVICEID='$id'");
-	$rec['UPDATED']=date('Y-m-d H:i:s');
-	if($findrec['ID']) {
-		$rec['ID']=$findrec['ID'];
-		SQLUpdate('dev_sonoff_devices', $rec);
-	} else {
-		$rec['ID']='';
-		$rec['ID']=SQLInsert('dev_sonoff_devices', $rec);
-	}
-	$id=$rec['ID'];
-	$findparams=SQLSelect("SELECT * FROM dev_sonoff_data WHERE DEVICE_ID='$id'");
-	$device['params']['online']=$device['online'];
-	foreach($device['params'] as $param=>$val) {
-		$rec_params['DEVICE_ID']=$rec['ID'];
-		$rec_params['TITLE']=$param;
-		$rec_params['VALUE']=$val;
-		$need_insert=true;
-		$rec_params['ID']='';
-		foreach ($findparams as $findparam) {
-			if($rec_params['TITLE']==$findparam['TITLE']) {
-				$need_insert=false;
-				$rec_params['ID']=$findparam['ID'];
-				if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-					sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
+if(!$decoded_res['error']){
+	foreach($decoded_res as $device) {
+		$this->config['APIKEY']=$device['apikey'];
+		$this->saveConfig();
+		$rec['TITLE']=$device['name'];
+		$rec['DEVICEID']=$device['deviceid'];
+		$id=$device['deviceid'];
+		$rec['BRANDNAME']=$device['brandName'];
+		$rec['PRODUCTMODEL']=$device['productModel'];
+		$rec['UIID']=$device['uiid'];
+		$findrec=SQLSelectOne("SELECT ID FROM dev_sonoff_devices WHERE DEVICEID='$id'");
+		$rec['UPDATED']=date('Y-m-d H:i:s');
+		if($findrec['ID']) {
+			$rec['ID']=$findrec['ID'];
+			SQLUpdate('dev_sonoff_devices', $rec);
+		} else {
+			$rec['ID']='';
+			$rec['ID']=SQLInsert('dev_sonoff_devices', $rec);
+		}
+		$id=$rec['ID'];
+		$findparams=SQLSelect("SELECT * FROM dev_sonoff_data WHERE DEVICE_ID='$id'");
+		$device['params']['online']=$device['online'];
+		foreach($device['params'] as $param=>$val) {
+			$rec_params['DEVICE_ID']=$rec['ID'];
+			$rec_params['TITLE']=$param;
+			$rec_params['VALUE']=$val;
+			$need_insert=true;
+			$rec_params['ID']='';
+			foreach ($findparams as $findparam) {
+				if($rec_params['TITLE']==$findparam['TITLE']) {
+					$need_insert=false;
+					$rec_params['ID']=$findparam['ID'];
+					if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
+						sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
+					}
 				}
 			}
+			if($need_insert) {
+				sqlInsert('dev_sonoff_data', $rec_params);
+			} else {
+				SQLUpdate('dev_sonoff_data', $rec_params);
+			}
+			
 		}
-		if($need_insert) {
-			sqlInsert('dev_sonoff_data', $rec_params);
-		} else {
-			SQLUpdate('dev_sonoff_data', $rec_params);
-		}
-		
 	}
 }
 ?>
