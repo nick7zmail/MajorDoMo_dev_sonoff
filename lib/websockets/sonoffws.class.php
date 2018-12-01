@@ -528,7 +528,10 @@ class SonoffWS implements CommonsContract
      */
     public function generateKey($len = 16, $encode = true): string
     {
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$&/()=[]{}0123456789';
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		$chars.= '0123456789';
+		if($encode) {$chars.= '!"$&/()=[]{}';}
+		
         $key = '';
         $chLen = strlen($chars);
         for ($i = 0; $i < $len; $i++) {

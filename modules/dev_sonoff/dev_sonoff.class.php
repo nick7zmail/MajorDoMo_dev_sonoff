@@ -275,7 +275,13 @@ function usual(&$out) {
 			$payload['userAgent']='app';
 			$payload['apikey']=$this->config['APIKEY'];
 			$payload['deviceid']=$device['DEVICEID'];
-			$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
+			if(strpos($properties['TITLE'], 'switch')!==false && $properties['TITLE']!='switches') {
+				$dev_arr=explode('.', $properties['TITLE']);
+				$payload['params']['switches'][0]['outlet']=$dev_arr[1];
+				$payload['params']['switches'][0]['switch']=$this->metricsModify($param, $value, 'to_device');
+			} else {
+				$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
+			}
 			$payload['sequence']=time()*1000;	
 			$jsonstring=json_encode($payload);
 			if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
@@ -361,11 +367,11 @@ function usual(&$out) {
  
  function metricsModify($param, $val, $out) {
 	if($out=='to_device') { 
-		if($param=='switch' || $param=='sledOnline') {
+		if((strpos($param, 'switch')!==false || $param=='sledOnline') && $param!='switches') {
 			$val=($val)? 'on' : 'off';
 		} 
 	} elseif($out=='from_device') {
-		if($param=='switch' || $param=='sledOnline') {
+		if((strpos($param, 'switch')!==false || $param=='sledOnline') && $param!='switches') {
 			$val=($val=='on')? 1 : 0;
 		} 
 	}

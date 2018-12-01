@@ -58,6 +58,30 @@ if(!$decoded_res['error']){
 				SQLUpdate('dev_sonoff_data', $rec_params);
 			}
 			
+			if($param=='switches') {			
+				foreach ($val as $devpart) {
+					$need_insert=true;
+					$rec_params['ID']='';	
+					$rec_params['DEVICE_ID']=$rec['ID'];
+					$rec_params['TITLE']='switch.'.$devpart['outlet'];
+					$rec_params['VALUE']=$devpart['switch'];
+					foreach ($findparams as $findparam) {
+						if($rec_params['TITLE']==$findparam['TITLE']) {
+							$need_insert=false;
+							$rec_params['ID']=$findparam['ID'];
+							if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
+								sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
+							}
+						}
+					}
+					if($need_insert) {
+						sqlInsert('dev_sonoff_data', $rec_params);
+					} else {
+						SQLUpdate('dev_sonoff_data', $rec_params);
+					}
+				}
+			}
+			
 		}
 	}
 }
