@@ -143,12 +143,18 @@ function admin(&$out) {
 
  if ($this->view_mode=='update_settings') {
    if(gr('login')) {
-	   $at=$this->loginAuth(gr('login'), gr('pass'));
+	   $login=$this->loginAuth(gr('login'), gr('pass'));
+	   $at=$login['at'];
+	   $this->config['HTTPS_API_URL']=$login['region'].'-api.coolkit.cc';
+	   $this->config['WSS_API_URL']=$this->getWssSrv($login['region'], $at);
+	   
+   } else {
+	   $this->config['HTTPS_API_URL']=gr('https_api_url');
+	   $this->config['WSS_API_URL']=gr('wss_api_url');
    }
    $this->config['EMAIL']=gr('login');
    $this->config['PASS']=gr('pass');
-   $this->config['HTTPS_API_URL']=gr('https_api_url');
-   $this->config['WSS_API_URL']=gr('wss_api_url');
+   
    if($at) {
 	   $this->config['TOKEN']=$at;
    } else {
@@ -406,7 +412,107 @@ function usual(&$out) {
  
  function loginAuth($login, $pass) {
 	$this->getConfig();
+	$host='https://api.coolkit.cc:8080/api/user/login';
+	//содержание файла, идущего со старыми версиями ewelink
+	$appid_str="204,208,176,196,204,176,216,192,176,224,176,220,176,200,212,176,228,176,200,196,176,204,192,176,204,196,176,204,204,176,208,224,176,208,192,176,216,196,176,200,192,176,212,228,176,204,228,176,196,228,176,216,176,204,224,176,196,208,176,196,228,176,200,220,176,208,192,176,204,228,176,216,176,212,200,176,200,220,176,208,192,176,216,208,176,212,196,176,204,216 "; //app ID
+	$key_str="216,200,176,212,200,176,208,212,176,200,220,176,204,204,176,200,204,176,208,204,176,208,216,176,216,204,176,204,224,176,216,204,176,204,216,176,196,200,176,208,204,176,212,212,176,196,208,176,200,212,176,204,196,176,204,216,176,208,192,176,204,220,176,200,200,176,220,176,200,212,176,204,192,176,204,224,176,216,196,176,216,196,176,204,192,176,212,228,176,208,196,176,212,196";//ключ
+	$dict_str='ab!@#$ijklmcdefghBCWXYZ01234DEFGHnopqrstuvwxyzAIJKLMNOPQRSTUV5689%^&*()';//словарь
+	//бъем на массивы
+	$app_arr=explode(',', $appid_str);
+	$key_arr=explode(',', $key_str);
+	$dict_arr=str_split($dict_str);	
+	//сдвигаем биты
+	foreach($key_arr as $key=>$byte) {
+		$key_arr[$key]=($byte >> 2);
+	}
+	foreach($app_arr as $key=>$byte) {
+		$app_arr[$key]=($byte >> 2);
+	}
+	//ещё пару преобразований
+    $indexes_str = implode(array_map("chr", $key_arr));
+    $indexes_arr = explode(',', $indexes_str);
+    $indexes2_str = implode(array_map("chr", $app_arr));
+    $indexes2_arr = explode(',', $indexes2_str);
+	//ищем индексы в словаре
+	foreach($indexes_arr as $index) {$crypt_key.= $dict_arr[$index];}
+	foreach($indexes2_arr as $index) {$appid.= $dict_arr[$index];}	
+	//формируем запрос
+	$payload['password']=$pass;
+	$payload['email']=$login;
+	$payload['version']=$this->config['VERSION'];
+	$payload['ts']=time();
+	$payload['os']=$this->config['OS'];
+	$payload['model']= $this->config['MODEL'];
+	$payload['romVersion']=$this->config['ROMVERSION'];
+	$payload['apkVesrion']=$this->config['APKVERSION'];
+	$payload['appid']=$appid;
+	
+	//генерация nonce
+	include_once("./lib/websockets/sonoffws.class.php");
+	$sonoffws = new SonoffWS($wssurl, $config);
+	$payload['nonce']=$sonoffws->generateKey(8, false);
+	$jsonstring=json_encode($payload);
+	//финальная подпись ключем
+	$sign=base64_encode(hash_hmac('sha256',$jsonstring,$crypt_key,true)); //получение конечной подписи
 
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $host);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+	 'POST /api/user/login HTTP/1.1',
+	 "Authorization: Sign $sign",
+	 'Content-Type: application/json',  
+	 'Content-Length: ' . strlen($jsonstring)
+	));
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
+	$response = curl_exec($ch);
+	curl_close($ch);
+	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');	 
+	$json_resp=json_decode($response, TRUE);	
+	return $json_resp;
+ }
+ 
+ function getWssSrv($reg, $at) {
+	$this->getConfig();
+	$host="https://$reg-disp.coolkit.cc:8080/dispatch/app";
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $host);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+	 'POST /dispatch/app HTTP/1.1',
+	 "Authorization: Bearer $at",
+	 'Content-Type: application/json'
+	)); 
+	
+	$payload['accept']=$pass;
+	$payload['email']=$login;
+	$payload['version']=$this->config['VERSION'];
+	$payload['ts']=time();
+	$payload['os']=$this->config['OS'];
+	$payload['model']= $this->config['MODEL'];
+	$payload['romVersion']=$this->config['ROMVERSION'];
+	$payload['apkVesrion']=$this->config['APKVERSION'];
+	$payload['appid']=$appid;
+
+	//генерация nonce
+	include_once("./lib/websockets/sonoffws.class.php");
+	$sonoffws = new SonoffWS($wssurl, $config);
+	$payload['nonce']=$sonoffws->generateKey(8, false);
+	$jsonstring=json_encode($payload);	
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
+	$response = curl_exec($ch);
+	curl_close($ch);	 
+	
+	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
+	
+	$resp=json_decode($response, TRUE);
+	return $resp['domain'];
  }
 /**
 * Install
