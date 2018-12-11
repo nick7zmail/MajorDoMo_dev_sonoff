@@ -275,9 +275,9 @@ function usual(&$out) {
 			$payload['userAgent']='app';
 			$payload['apikey']=$this->config['APIKEY'];
 			$payload['deviceid']=$device['DEVICEID'];
-			if(strpos($properties['TITLE'], 'switch')!==false && $properties['TITLE']!='switches') {
-				$dev_arr=explode('.', $properties['TITLE']);
-				$payload['params']['switches'][0]['outlet']=$dev_arr[1];
+			if(strpos($param, 'switch.')!==false) {
+				$dev_arr=explode('.', $param);
+				$payload['params']['switches'][0]['outlet']=intval($dev_arr[1]);
 				$payload['params']['switches'][0]['switch']=$this->metricsModify($param, $value, 'to_device');
 			} else {
 				$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
