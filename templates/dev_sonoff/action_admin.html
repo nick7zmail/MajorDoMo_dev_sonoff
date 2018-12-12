@@ -67,7 +67,7 @@
 </div>
 
 <div class="form-group">
- <label class="control-label">
+ <label class="control-label" [#if ERR_VERSION#] style="color:red;font-weight:bold"[#endif#]>
  version:
  </label>
  <div class="controls"><input type="text" name="version" value="[#VERSION#]" class="input"></div>

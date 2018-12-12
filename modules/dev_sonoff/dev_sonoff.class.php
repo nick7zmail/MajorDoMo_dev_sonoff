@@ -124,10 +124,6 @@ function run() {
 function admin(&$out) {
  $this->getConfig();
  $out['HTTPS_API_URL']=$this->config['HTTPS_API_URL'];
- if (!$out['HTTPS_API_URL']) {
-  $out['HTTPS_API_URL']='https://';
- }
- $out['HTTPS_API_URL']=$this->config['HTTPS_API_URL'];
  $out['WSS_API_URL']=$this->config['WSS_API_URL'];
  $out['TOKEN']=$this->config['TOKEN'];
  $out['EMAIL']=$this->config['EMAIL'];
@@ -142,14 +138,17 @@ function admin(&$out) {
  $out['ROMVERSION']=$this->config['ROMVERSION'];
 
  if ($this->view_mode=='update_settings') {
+	$api_url = "";
+	
    if(gr('login')) {
 	   $login=$this->loginAuth(gr('login'), gr('pass'));
 	   $at=$login['at'];
-	   $this->config['HTTPS_API_URL']=$login['region'].'-api.coolkit.cc';
-	   $this->config['WSS_API_URL']=$this->getWssSrv($login['region'], $at);
+	   $reg=$login['region'];
+	   $api_url = "$reg-api.coolkit.cc";
+	   $this->config['WSS_API_URL']=$this->getWssSrv($reg, $at);
 	   
    } else {
-	   $this->config['HTTPS_API_URL']=gr('https_api_url');
+	   $api_url=gr('https_api_url');
 	   $this->config['WSS_API_URL']=gr('wss_api_url');
    }
    $this->config['EMAIL']=gr('login');
@@ -162,10 +161,14 @@ function admin(&$out) {
    }
    $this->config['POLL_PERIOD']=intval(gr('poll_period'));
    $this->config['DEBUG']=gr('debug');
-   $this->config['VERSION']=gr('version');
+   $this->config['VERSION']=intval(gr('version'));
    $this->config['APKVERSION']=gr('apkversion');
+   $this->config['OS']=gr('os');
    $this->config['MODEL']=gr('model');
    $this->config['ROMVERSION']=gr('romVersion');
+   $this->config['HTTPS_API_URL'] = $api_url;
+
+   if(!intval(gr('version'))) $out['ERR_VERSION']=1;
 
    if(!intval(gr('poll_period'))) $out['ERR_POLL_PERIOD']=1;
 
