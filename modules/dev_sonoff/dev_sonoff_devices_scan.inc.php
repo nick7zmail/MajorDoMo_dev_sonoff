@@ -18,7 +18,6 @@ $decoded_res=json_decode($response, TRUE);
 if(!$decoded_res['error']){
 	foreach($decoded_res as $device) {
 		$this->config['APIKEY']=$device['apikey'];
-		$this->saveConfig();
 		$rec['TITLE']=$device['name'];
 		$rec['DEVICEID']=$device['deviceid'];
 		$id=$device['deviceid'];
@@ -84,5 +83,7 @@ if(!$decoded_res['error']){
 			
 		}
 	}
+
+	$this->saveConfig();
 }
 ?>
