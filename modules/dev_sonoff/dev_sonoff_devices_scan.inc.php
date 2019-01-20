@@ -36,6 +36,7 @@ if(!$decoded_res['error']){
 		$id=$rec['ID'];
 		$findparams=SQLSelect("SELECT * FROM dev_sonoff_data WHERE DEVICE_ID='$id'");
 		$device['params']['online']=$device['online'];
+		$device['params']['cmdline']='';
 		foreach($device['params'] as $param=>$val) {
 			$rec_params['DEVICE_ID']=$rec['ID'];
 			$rec_params['TITLE']=$param;
@@ -78,6 +79,40 @@ if(!$decoded_res['error']){
 					} else {
 						SQLUpdate('dev_sonoff_data', $rec_params);
 					}
+				}
+			}
+			
+			if($param=='rfList') {			
+				$need_insert=true;
+				$rec_params['ID']='';	
+				$rec_params['DEVICE_ID']=$rec['ID'];
+				$rec_params['TITLE']='rfsend';
+				foreach ($findparams as $findparam) {
+					if($rec_params['TITLE']==$findparam['TITLE']) {
+						$need_insert=false;
+						$rec_params['ID']=$findparam['ID'];
+					}
+				}
+				if($need_insert) {
+					sqlInsert('dev_sonoff_data', $rec_params);
+				} else {
+					SQLUpdate('dev_sonoff_data', $rec_params);
+				}
+				
+				$need_insert=true;
+				$rec_params['ID']='';	
+				$rec_params['DEVICE_ID']=$rec['ID'];
+				$rec_params['TITLE']='rflearn';
+				foreach ($findparams as $findparam) {
+					if($rec_params['TITLE']==$findparam['TITLE']) {
+						$need_insert=false;
+						$rec_params['ID']=$findparam['ID'];
+					}
+				}
+				if($need_insert) {
+					sqlInsert('dev_sonoff_data', $rec_params);
+				} else {
+					SQLUpdate('dev_sonoff_data', $rec_params);
 				}
 			}
 			

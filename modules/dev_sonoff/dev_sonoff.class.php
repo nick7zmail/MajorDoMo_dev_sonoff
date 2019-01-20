@@ -282,6 +282,14 @@ function usual(&$out) {
 				$dev_arr=explode('.', $param);
 				$payload['params']['switches'][0]['outlet']=intval($dev_arr[1]);
 				$payload['params']['switches'][0]['switch']=$this->metricsModify($param, $value, 'to_device');
+			} elseif($param=='rfsend') {
+				$payload['params']['cmd']='transmit';
+				$payload['params']['rfChl']=intval($value);
+			} elseif($param=='rflearn') {
+				$payload['params']['cmd']='capture';
+				$payload['params']['rfChl']=intval($value);
+			} elseif($param=='cmdline') {
+				$payload['params']=$value;
 			} else {
 				$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
 			}
