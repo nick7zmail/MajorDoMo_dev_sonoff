@@ -48,7 +48,7 @@ if(!$decoded_res['error']){
 					$need_insert=false;
 					$rec_params['ID']=$findparam['ID'];
 					if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-						sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
+						sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'));
 					}
 				}
 			}
@@ -70,7 +70,7 @@ if(!$decoded_res['error']){
 							$need_insert=false;
 							$rec_params['ID']=$findparam['ID'];
 							if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-								sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'));
+								sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'));
 							}
 						}
 					}
