@@ -186,6 +186,9 @@ function admin(&$out) {
   if ($this->view_mode=='edit_dev_sonoff_devices') {
    $this->edit_dev_sonoff_devices($out, $this->id);
   }
+  if ($this->view_mode=='share_dev_sonoff_devices') {
+   $this->share_dev_sonoff_devices($out, $this->id);
+  }
   if ($this->view_mode=='delete_dev_sonoff_devices') {
    $this->delete_dev_sonoff_devices($this->id);
    $this->redirect("?data_source=dev_sonoff_devices");
@@ -236,6 +239,10 @@ function usual(&$out) {
 */
  function edit_dev_sonoff_devices(&$out, $id) {
   require(DIR_MODULES.$this->name.'/dev_sonoff_devices_edit.inc.php');
+ }
+ 
+ function share_dev_sonoff_devices(&$out, $id) {
+  require(DIR_MODULES.$this->name.'/dev_sonoff_devices_share.inc.php');
  }
 /**
 * dev_sonoff_devices delete record
