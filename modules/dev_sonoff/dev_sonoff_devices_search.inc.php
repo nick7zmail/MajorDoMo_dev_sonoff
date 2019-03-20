@@ -28,10 +28,11 @@
 	foreach($res_online as $id_online){
 		if($res[$i]['ID']==$id_online['DEVICE_ID'] && $id_online['VALUE']==1 && $id_online['TITLE']=='online') $res[$i]['ONLINE']='1';
 		if($res[$i]['ID']==$id_online['DEVICE_ID'] && $id_online['TITLE']=='rssi') {
-			if ($id_online['VALUE']>=-70)  {$res[$i]['RSSI_LVL']=100; $res[$i]['RSSI_COLOR']='#5cb85c';} 
-			elseif ($id_online['VALUE']<-70 && $id_online['VALUE']>=-85) {$res[$i]['RSSI_LVL']=75; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
-			elseif ($id_online['VALUE']<-85 && $id_online['VALUE']>=-100) {$res[$i]['RSSI_LVL']=50; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
-			elseif ($id_online['VALUE']<-100) {$res[$i]['RSSI_LVL']=25; $res[$i]['RSSI_COLOR']='#d9534f';} 
+			if ($id_online['VALUE']>=-35)  {$res[$i]['RSSI_LVL']=100; $res[$i]['RSSI_COLOR']='#5cb85c';} 
+			elseif ($id_online['VALUE']<-53 && $id_online['VALUE']>=-35) {$res[$i]['RSSI_LVL']=75; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
+			elseif ($id_online['VALUE']<-53 && $id_online['VALUE']>=-71) {$res[$i]['RSSI_LVL']=50; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
+			elseif ($id_online['VALUE']<-71) {$res[$i]['RSSI_LVL']=25; $res[$i]['RSSI_COLOR']='#d9534f';}
+			else {$res[$i]['RSSI_LVL']=0; $res[$i]['RSSI_COLOR']='#d9534f';}
 		}
 	}
 	$res[$i]['IMG']='/img/sonoff/'.$res[$i]['UIID'].'.jpg';

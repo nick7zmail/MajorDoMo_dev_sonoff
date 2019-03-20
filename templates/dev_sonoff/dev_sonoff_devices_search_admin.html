@@ -1,38 +1,5 @@
 
 <!-- table dev_sonoff_devices search -->
-<style>
-.panel-heading {padding:3px}
-.panel-title {padding: 9px 12px 9px 12px;}
-.btn-round {
-  border-radius:50px;
-    padding-left: 6px;
-    padding-right: 6px;
-    width: 34px;
-}
-.dropdown-menu li a .glyphicon {
-  width:25px;
-}
-.dropdown-menu{
- left: -80px; 
-}    
-.card-img {
-  width:80px;
-  margin-right:10px;
-}
-.signal-level {
-  font-size: 20px;
-}
-.signal-level .glyphicon-signal {
-  color: #000;
-  background: #fff;
-  mix-blend-mode: lighten;
-  padding-top:2px;
-  padding-bottom:9px;
-  top: 0px;
-}
-.panel-content {padding: 5px 10px 0px 10px;}
-</style>
-
 <p>
 <a href="#" class="btn btn-primary" onClick="$('#api_settings').toggle();return false;"><i class="glyphicon glyphicon-cog"></i></a>
 <a href="?view_mode=edit_dev_sonoff_devices&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> <#LANG_ADD#></a>
@@ -56,73 +23,82 @@
 [#endif PAGES#]
 <!-- / paging -->
 <!-- search results (list) -->
-<form action="?" method="post" name="frmList_dev_sonoff_devices" style="padding:0px">
-<div class="container-fluid">
-<div class="row">
+<form action="?" method="post" name="frmList_dev_sonoff_devices" style="padding:0px" class="form">
+<table  align=center class="table table-striped">
+<tbody>
+<tr>
+	<th></th>
+	<th><#LANG_TITLE#></th>
+	<th>Производитель</th>
+	<th>Модель</th>
+	<th>Сигнал</th>
+	<th><#LANG_ONLINE#></th>
+	<th><#LANG_UPDATED#></th>
+	<th><#LANG_ACTIONS#></th>
+</tr>
 [#begin RESULT#]
-  
-  
-  <div class="col-sm-6 col-md-5 col-lg-4">
-    <div class="panel [#if ONLINE!=""#]panel-success[#else#]panel-danger[#endif#]">
-        <div class="panel-heading">
-          <div style="float:right;" class="dropdown">
-            <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]&tab=data" class="btn btn-default btn-round" title="Data">
-              <span class="glyphicon glyphicon-list"></span>
-            </a>
-            <a class="btn btn-default btn-round" data-toggle="dropdown" href="#">
-              <span class="caret"></span>
-            </a>        
-            <ul class="dropdown-menu">
-              <li><a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]" title="Edit"><span class="glyphicon glyphicon-pencil"></span>Редактировать</a></li>
-              <li><a href="?data_source=<#DATA_SOURCE#>&view_mode=share_dev_sonoff_devices&id=[#ID#]" title="Share"><span class="glyphicon glyphicon-tags"></span>Поделиться</a></li>
-              <li class="divider"></li>
-              <li><a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_dev_sonoff_devices&id=[#ID#]" onClick="return confirm('Are you sure? Please confirm.')" style="color: #a94442;"><span class="glyphicon glyphicon-trash"></span>Удалить</a></li>
-            </ul>             
-          </div>
-          <h3 class="panel-title">[#TITLE#]</h3>
-        </div>
-      <div class="panel-content">
-			  [#if ONLINE!=""#]
-				<div class="pull-right signal-level" style="background: linear-gradient(to right, [#RSSI_COLOR#] [#RSSI_LVL#]%,  #999 [#RSSI_LVL#]%);">
-				  <div class="glyphicon glyphicon-signal"></div>
-				</div>
-			  [#else#]
-				<div class="pull-right">
-				  <span class="label label-danger"><#LANG_OFFLINE#></span>
-				</div>
-			  [#endif#]
+<tr>
+<td style="vertical-align:middle; width:52px"><img class="img-circle" src="[#IMG#]" alt="Device Logo" width="34" height="34">
+</td>
 
-		<img class="card-img pull-left img-circle" src="[#IMG#]" alt="Device Logo">
-        <div class="caption">
-          <div style="color:#999;font-size: 12px;">Модель</div>
-          <div style="font-size:20px">  [#if PRODUCTMODEL!=""#]
-										   [#PRODUCTMODEL#]
-										  [#else#]
-										   &nbsp;
-										  [#endif#]</div>
-          <div class="pull-right">
-            <div style="color:#999;font-size: 12px;"><#LANG_UPDATED#></div>
-            <p>  [#if UPDATED!=""#]
-				   [#UPDATED#]
-				  [#else#]
-				   &nbsp;
-				  [#endif#]</p>
-          </div>
-          <div style="color:#999;font-size: 12px;">Производитель</div>
-          <p>  [#if BRANDNAME!=""#]
-			   [#BRANDNAME#]
-			  [#else#]
-			   &nbsp;
-			  [#endif#]</p>
-        </div>
-      </div>
-    </div>
+ <td>
+  <b>
+   [#TITLE#]
+  </a></b>
+ </td>
+ 
+ <td>
+  [#if BRANDNAME!=""#]
+   [#BRANDNAME#]
+  [#else#]
+   &nbsp;
+  [#endif#]
+ </td>
+ 
+ <td>
+  [#if PRODUCTMODEL!=""#]
+   [#PRODUCTMODEL#]
+  [#else#]
+   &nbsp;
+  [#endif#]
+ </td>
+ 
+ <td>
+ 	 <div class="progress progress-striped">
+	  <div class="progress-bar" role="progressbar" aria-valuenow="[#RSSI_LVL#]" aria-valuemin="0" aria-valuemax="100" style="width: [#RSSI_LVL#]%; background:[#RSSI_COLOR#];">
+	  </div>
+	</div>
+ </td>
+
+ <td>
+  [#if ONLINE!=""#]
+   <span class="label label-success"><#LANG_ONLINE#></span>
+  [#else#]
+   <span class="label label-danger"><#LANG_OFFLINE#></span>
+  [#endif#]
+ </td> 
+ 
+ <td>
+  [#if UPDATED!=""#]
+   [#UPDATED#]
+  [#else#]
+   &nbsp;
+  [#endif#]
+ </td>
+ <td width="1%" nowrap>
+  <div>
+  [#if "<#ACTION#>"=="admin"#]
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]" class="btn btn-default" title="Edit"><i class="glyphicon glyphicon-pencil"></i></a>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]&tab=data" class="btn btn-default" title="Data"><i class="glyphicon glyphicon-th-list"></i></a>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=share_dev_sonoff_devices&id=[#ID#]" class="btn btn-default" title="Share"><i class="glyphicon glyphicon-tags"></i></a>
+   <a href="?data_source=<#DATA_SOURCE#>&view_mode=delete_dev_sonoff_devices&id=[#ID#]" onClick="return confirm('Are you sure? Please confirm.')" class="btn btn-default" title="Delete"><i class="glyphicon glyphicon-remove"></i></a>
+  [#endif ACTION#]
   </div>
-  
-  
-
+ </td>
+</tr>
 [#end RESULT#]
-</div></div>
+</tbody>
+</table>
 <input type="hidden" name="data_source" value="<#DATA_SOURCE#>">
 <input type="hidden" name="view_mode" value="multiple_dev_sonoff_devices">
 </form>
