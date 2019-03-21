@@ -36,6 +36,7 @@
 				else {$res[$i]['RSSI_LVL']=0; $res[$i]['RSSI_COLOR']='#d9534f';}
 			}
 		}
+	}
 	$res[$i]['IMG']='/img/sonoff/'.$res[$i]['UIID'].'.jpg';
 	if (!file_exists(ROOT.$res[$i]['IMG'])) $res[$i]['IMG']='/img/sonoff/unknown.png';
     // some action for every record if required
