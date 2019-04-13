@@ -159,26 +159,20 @@ class SonoffWS implements CommonsContract
             . "\r\n\r\n";
     }
 
-    /**
-     * @return string
-     */
-    public function getLastOpcode(): string
+    public function getLastOpcode()
     {
         return $this->lastOpcode;
     }
 
-    /**
-     * @return int
-     */
-    public function getCloseStatus(): int
+    public function getCloseStatus()
     {
         return $this->closeStatus;
     }
-
-    /**
-     * @return bool
-     */
-    public function isConnected(): bool
+    public function getSocket()
+    {
+        return $this->socket;
+    }
+    public function isConnected()
     {
         return $this->isConnected;
     }
@@ -430,7 +424,6 @@ class SonoffWS implements CommonsContract
 
         return $payloadLength;
     }
-
     /**
      * Tell the socket to close.
      *

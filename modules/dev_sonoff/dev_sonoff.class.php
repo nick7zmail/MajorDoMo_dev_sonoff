@@ -225,6 +225,14 @@ function usual(&$out) {
   require(DIR_MODULES.$this->name.'/dev_sonoff_devices_scan.inc.php');
  }
 /**
+* dev_sonoff_devices cloud scan
+*
+* @access public
+*/
+ function dev_sonoff_devices_wss($recv, $sonoffws) {
+  require(DIR_MODULES.$this->name.'/dev_sonoff_devices_wss.inc.php');
+ }
+/**
 * dev_sonoff_devices search
 *
 * @access public
@@ -327,20 +335,17 @@ function usual(&$out) {
 					}
 				}
 			}
-			
-			
-			if($this->config['DEBUG']) {
-				$recv=$this->sonoffws->receive();
-				debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
-			}
 			$sonoffws->close();
     }
    }
  }
- function processCycle() {
- $this->dev_sonoff_devices_cloudscan();
- }
  
+ function processCycle() {
+	$this->dev_sonoff_devices_cloudscan();
+ }
+ function wssRecv($recv, $sonoffws) {
+	$this->dev_sonoff_devices_wss($recv, $sonoffws); 
+ }
  
  
  function getWssUrl() {
@@ -377,10 +382,6 @@ function usual(&$out) {
         }
 	}
 	
-	if($this->config['DEBUG']) {
-		$recv=$this->sonoffws->receive();
-		debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
-	}
  }
  
  function metricsModify($param, $val, $out) {

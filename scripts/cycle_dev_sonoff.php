@@ -18,13 +18,14 @@ if (!$tmp['ID'])
    exit; // no devices added -- no need to run this cycle
 echo date("H:i:s") . " running " . basename(__FILE__) . PHP_EOL;
 $latest_check=0;
-$checkEvery=$dev_sonoff_module->config['POLL_PERIOD']; //polling devices time (http)
+$checkEvery=$dev_sonoff_module->config['POLL_PERIOD'];
 //websockets
 $wssurl=$dev_sonoff_module->getWssUrl();
 $sonoffws = new SonoffWS($wssurl, $config);
 
 while (1)
 {
+//====================================HTTP POLLING===================================
    setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
    //http polling devices
    if ((time()-$latest_check)>$checkEvery) {
@@ -32,14 +33,27 @@ while (1)
     echo date('Y-m-d H:i:s').' Polling devices...';
     $dev_sonoff_module->processCycle();
    }
- /*  
-   //websockets works
-	if($sonoffws->isConnected()) {
+//====================================END HTTP POLLING===============================  
+
+//====================================WSS POLLING====================================
+ /*  setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
+    echo date('Y-m-d H:i:s').' Polling devices...';
+    	if($sonoffws->isConnected()) {
 		//выполняем если подключено
-		//if($sonoffws->receive()) {
-		//	$recv=$sonoffws->receive();
-		//	$dev_sonoff_module->wssRecv($recv);
-		//}
+		$read   = array($sonoffws->getSocket());
+		$write  = NULL;
+		$except = NULL;
+		if (false === ($num_changed_streams = stream_select($read, $write, $except, $checkEvery))) {
+			// Обработка ошибок
+		} elseif ($num_changed_streams > 0) {
+			// Как минимум на одном из потоков произошло что-то интересное
+			$recv=$sonoffws->receive();
+			if($dev_sonoff_module->config['DEBUG']) {
+				debmes('[wss] +++ '.$recv, 'cycle_dev_sonoff_debug');
+			}
+			$dev_sonoff_module->wssRecv($recv, $sonoffws);
+		}
+		
 	} else {
 		//переподключаемся
 		$sonoffws = new SonoffWS($wssurl, $config);
@@ -50,6 +64,8 @@ while (1)
 		}
 	}
 */
+//====================================END WSS POLLING================================
+
 
    if (file_exists('./reboot') || IsSet($_GET['onetime']))
    {
