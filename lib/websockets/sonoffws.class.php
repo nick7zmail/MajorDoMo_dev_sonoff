@@ -4,7 +4,6 @@ class SonoffWS implements CommonsContract
 	private $socket;
     private $isConnected = false;
     private $isClosing = false;
-    private $lastOpcode;
     private $closeStatus;
     private $hugePayload;
 	private $fragmentSize = SonoffWS::DEFAULT_FRAGMENT_SIZE;
@@ -40,14 +39,14 @@ class SonoffWS implements CommonsContract
         );
 
         if ($this->socket === false) {
-            throw new ConnectionException(
+            throw new Exception(
                 "Could not open socket to \"$host:$port\": $errstr ($errno).",
                 CommonsContract::CLIENT_COULD_NOT_OPEN_SOCKET
             );
         }
 
         // Set timeout on the stream as well.
-        stream_set_timeout($this->socket, 5);
+        stream_set_timeout($this->socket, self::DEFAULT_TIMEOUT);
 
         // Generate the WebSocket key.
         $key = $this->generateKey();
@@ -75,12 +74,12 @@ class SonoffWS implements CommonsContract
      * @param string $scheme
      * @param string $host
      * @return string
-     * @throws BadUriException
+     * @throws Exception
      */
     private function getHostUri(string $scheme, string $host): string
     {
         if (in_array($scheme, ['ws', 'wss'], true) === false) {
-            throw new BadUriException(
+            throw new Exception(
                 "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' .",
                 CommonsContract::CLIENT_INCORRECT_SCHEME
             );
@@ -94,14 +93,14 @@ class SonoffWS implements CommonsContract
      * @param string $host
      * @param string $pathWithQuery
      * @param string $key
-     * @throws ConnectionException
+     * @throws Exception
      */
     private function validateResponse(string $scheme, string $host, string $pathWithQuery, string $key)
     {
         $response = stream_get_line($this->socket, self::DEFAULT_RESPONSE_HEADER, "\r\n\r\n");
         if (!preg_match(self::SEC_WEBSOCKET_ACCEPT_PTTRN, $response, $matches)) {
             $address = $scheme . '://' . $host . $pathWithQuery;
-            throw new ConnectionException(
+            throw new Exception(
                 "Connection to '{$address}' failed: Server sent invalid upgrade response:\n"
                 . $response, CommonsContract::CLIENT_INVALID_UPGRADE_RESPONSE
             );
@@ -115,7 +114,7 @@ class SonoffWS implements CommonsContract
 			echo PHP_EOL;
 			echo $expectedResonse;
 			echo PHP_EOL;
-            throw new ConnectionException('Server sent bad upgrade response.',
+            throw new Exception('Server sent bad upgrade response.',
                 CommonsContract::CLIENT_INVALID_UPGRADE_RESPONSE);
         }
     }
@@ -159,11 +158,6 @@ class SonoffWS implements CommonsContract
             . "\r\n\r\n";
     }
 
-    public function getLastOpcode()
-    {
-        return $this->lastOpcode;
-    }
-
     public function getCloseStatus()
     {
         return $this->closeStatus;
@@ -175,29 +169,14 @@ class SonoffWS implements CommonsContract
     public function isConnected()
     {
         return $this->isConnected;
-    }
-	
-	/**
-     * @param int $timeout
-     * @param null $microSecs
-     * @return WscMain
-     */
-    public function setTimeout(int $timeout, $microSecs = NULL): WscMain
-    {
-        $this->config->setTimeout($timeout);
-        if ($this->socket && get_resource_type($this->socket) === 'stream') {
-            stream_set_timeout($this->socket, $timeout, $microSecs);
-        }
-
-        return $this;
-    }
+    }	
     public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT)
     {
         if (!$this->isConnected) {
             $this->connect();
         }
         if (array_key_exists($opcode, self::$opcodes) === false) {
-            throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.",
+            throw new Exception("Bad opcode '$opcode'.  Try 'text' or 'binary'.",
                 CommonsContract::CLIENT_BAD_OPCODE);
         }
         // record the length of the payload
@@ -228,8 +207,7 @@ class SonoffWS implements CommonsContract
      * @param $payload
      * @param $opcode
      * @param $masked
-     * @throws ConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
     public function sendFragment($final, $payload, $opcode, $masked)
     {
@@ -247,10 +225,10 @@ class SonoffWS implements CommonsContract
         // 7 bits of payload length...
         $payloadLen = strlen($payload);
         if ($payloadLen > self::MAX_BYTES_READ) {
-            $frameHeadBin .= decbin(self::MASK_127);
+            $frameHeadBin .= decbin(127);
             $frameHeadBin .= sprintf('%064b', $payloadLen);
-        } else if ($payloadLen > self::MASK_125) {
-            $frameHeadBin .= decbin(self::MASK_126);
+        } else if ($payloadLen > 125) {
+            $frameHeadBin .= decbin(126);
             $frameHeadBin .= sprintf('%016b', $payloadLen);
         } else {
             $frameHeadBin .= sprintf('%07b', $payloadLen);
@@ -284,7 +262,6 @@ class SonoffWS implements CommonsContract
      * Receives message client<-server
      *
      * @return null|string
-     * @throws \InvalidArgumentException
      * @throws BadOpcodeException
      * @throws BadUriException
      * @throws ConnectionException
@@ -308,39 +285,30 @@ class SonoffWS implements CommonsContract
 
     /**
      * @return null|string
-     * @throws \InvalidArgumentException
-     * @throws BadOpcodeException
-     * @throws BadUriException
-     * @throws ConnectionException
-     * @throws \Exception
+
      */
     public function receiveFragment()
     {
         // Just read the main fragment information first.
         $data = $this->read(2);
-
         // Is this the final fragment?  // Bit 0 in byte 0
         /// @todo Handle huge payloads with multiple fragments.
         $final = (bool)(ord($data[0]) & 1 << 7);
 
-        // Parse opcode
         $opcode_int = ord($data[0]) & 31; // Bits 4-7
         $opcode_ints = array_flip(self::$opcodes);
         if (!array_key_exists($opcode_int, $opcode_ints)) {
-            throw new ConnectionException("Bad opcode in websocket frame: $opcode_int",
+            throw new Exception("Bad opcode in websocket frame: $opcode_int",
                 CommonsContract::CLIENT_BAD_OPCODE);
         }
 
         $opcode = $opcode_ints[$opcode_int];
-
-        // record the opcode if we are not receiving a continutation fragment
-        if ($opcode !== 'continuation') {
-            $this->lastOpcode = $opcode;
-        }
-
+	
         $payloadLength = $this->getPayloadLength($data);
         $payload = $this->getPayloadData($data, $payloadLength);
-
+		if ($opcode === CommonsContract::EVENT_TYPE_PING) {
+			$this->onPing();
+		}
         if ($opcode === CommonsContract::EVENT_TYPE_CLOSE) {
             // Get the close status.
             if ($payloadLength >= 2) {
@@ -365,7 +333,6 @@ class SonoffWS implements CommonsContract
 
         if (!$final) {
             $this->hugePayload .= $payload;
-
             return NULL;
         } // this is the last fragment, and we are processing a huge_payload
 
@@ -377,7 +344,7 @@ class SonoffWS implements CommonsContract
         return $payload;
     }
 	
-    private function getPayloadData(string $data, int $payloadLength): string
+    private function getPayloadData(string $data, int $payloadLength)
     {
         // Masking?
         $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
@@ -412,9 +379,9 @@ class SonoffWS implements CommonsContract
      */
     private function getPayloadLength(string $data)
     {
-        $payloadLength = (int)ord($data[1]) & self::MASK_127; // Bits 1-7 in byte 1
-        if ($payloadLength > self::MASK_125) {
-            if ($payloadLength === self::MASK_126) {
+        $payloadLength = (int)ord($data[1]) & 127; // Bits 1-7 in byte 1
+        if ($payloadLength > 125) {
+            if ($payloadLength === 126) {
                 $data = $this->read(2); // 126: Payload is a 16-bit unsigned int
             } else {
                 $data = $this->read(8); // 127: Payload is a 64-bit unsigned int
@@ -449,14 +416,13 @@ class SonoffWS implements CommonsContract
 
     /**
      * @param $data
-     * @throws ConnectionException
      */
     public function write(string $data)
     {
         $written = fwrite($this->socket, $data);
 
         if ($written < strlen($data)) {
-            throw new ConnectionException(
+            throw new Exception(
                 "Could only write $written out of " . strlen($data) . ' bytes.',
                 CommonsContract::CLIENT_COULD_ONLY_WRITE_LESS
             );
@@ -466,17 +432,16 @@ class SonoffWS implements CommonsContract
     /**
      * @param int $len
      * @return string
-     * @throws ConnectionException
+     * @throws Exception
      */
-    public function read(int $len): string
+    protected function read(int $len)
     {
         $data = '';
         while (($dataLen = strlen($data)) < $len) {
             $buff = fread($this->socket, $len - $dataLen);
-
             if ($buff === false) {
                 $metadata = stream_get_meta_data($this->socket);
-                throw new ConnectionException(
+                throw new Exception(
                     'Broken frame, read ' . strlen($data) . ' of stated '
                     . $len . ' bytes.  Stream state: '
                     . json_encode($metadata), CommonsContract::CLIENT_BROKEN_FRAME
@@ -485,14 +450,14 @@ class SonoffWS implements CommonsContract
 
             if ($buff === '') {
                 $metadata = stream_get_meta_data($this->socket);
-                throw new ConnectionException(
+                throw new Exception(
                     'Empty read; connection dead?  Stream state: ' . json_encode($metadata),
                     CommonsContract::CLIENT_EMPTY_READ
                 );
             }
             $data .= $buff;
-        }
-
+		}
+		
         return $data;
     }
 
@@ -519,7 +484,7 @@ class SonoffWS implements CommonsContract
      * @return string   the 16 character length key
      * @throws \Exception
      */
-    public function generateKey($len = 16, $encode = true): string
+    public function generateKey($len = 16, $encode = true)
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 		$chars.= '0123456789';
@@ -536,11 +501,22 @@ class SonoffWS implements CommonsContract
 			return $key;
 		}
     }
-	
-	public function getFragmentSize(): int
+	public function getFragmentSize()
     {
         return $this->fragmentSize;
     }
+	public function onPing()
+    {
+        if (is_resource($this->socket)) {
+            $this->send($status_str . $message, CommonsContract::EVENT_TYPE_PONG);
+        }
+    }
+	public function PingSend()
+    {
+        if (is_resource($this->socket)) {
+            $this->send('ping', CommonsContract::EVENT_TYPE_TEXT);
+        }
+    }	
 	
 }
 
@@ -561,30 +537,6 @@ interface CommonsContract
         self::EVENT_TYPE_PONG => 'onPong',
     ];
 
-    // DECODE FRAMES
-    const DECODE_TEXT   = 1;
-    const DECODE_BINARY = 2;
-    const DECODE_CLOSE  = 8;
-    const DECODE_PING   = 9;
-    const DECODE_PONG   = 10;
-
-    // ENCODE FRAMES
-    const ENCODE_TEXT  = 129;
-    const ENCODE_CLOSE = 136;
-    const ENCODE_PING  = 137;
-    const ENCODE_PONG  = 138;
-
-    // MASKS
-    const MASK_125 = 125;
-    const MASK_126 = 126;
-    const MASK_127 = 127;
-    const MASK_128 = 128;
-    const MASK_254 = 254;
-    const MASK_255 = 255;
-
-    // PAYLOADS
-    const PAYLOAD_CHUNK    = 8;
-    const PAYLOAD_MAX_BITS = 65535;
 
     // transfer protocol-level errors
     const SERVER_COULD_NOT_BIND_TO_SOCKET = 101;
@@ -600,17 +552,11 @@ interface CommonsContract
     const CLIENT_EMPTY_READ               = 111;
 	
     const MAX_BYTES_READ = 65535;
-    const DEFAULT_TIMEOUT = 5;
+	const DEFAULT_TIMEOUT = 5;
     const DEFAULT_FRAGMENT_SIZE = 4096;
     const DEFAULT_RESPONSE_HEADER = 1024;
     const SEC_WEBSOCKET_ACCEPT_PTTRN = '/Sec-WebSocket-Accept:\s(.*)$/mUi';
     const SERVER_KEY_ACCEPT = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-    const RESOURCE_TYPE_STREAM = '';
 
-	
 
-}
-
-class ConnectionException extends \Exception
-{
 }

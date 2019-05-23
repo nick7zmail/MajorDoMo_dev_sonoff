@@ -128,7 +128,6 @@ function admin(&$out) {
  $out['TOKEN']=$this->config['TOKEN'];
  $out['EMAIL']=$this->config['EMAIL'];
  $out['PASS']=$this->config['PASS'];
- $out['POLL_PERIOD']=$this->config['POLL_PERIOD'];
  $out['DEBUG']=$this->config['DEBUG'];
  $out['APIKEY']=$this->config['APIKEY'];
  $out['VERSION']=$this->config['VERSION'];
@@ -159,7 +158,6 @@ function admin(&$out) {
    } else {
 	   $this->config['TOKEN']=gr('token');
    }
-   $this->config['POLL_PERIOD']=intval(gr('poll_period'));
    $this->config['DEBUG']=gr('debug');
    $this->config['VERSION']=intval(gr('version'));
    $this->config['APKVERSION']=gr('apkversion');
@@ -170,7 +168,6 @@ function admin(&$out) {
 
    if(!intval(gr('version'))) $out['ERR_VERSION']=1;
 
-   if(!intval(gr('poll_period'))) $out['ERR_POLL_PERIOD']=1;
 
    $this->saveConfig();
    $this->dev_sonoff_devices_cloudscan();

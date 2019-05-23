@@ -102,4 +102,18 @@ if($decoded_res['action']=='update' ) {
 		}
 	}
 }
+if($decoded_res['action']=='share') {
+	//addToOperationsQueue($this->name, 'device_to_add', $decoded_res['deviceid']);
+	$payload['result']=2;
+	$payload['deviceid']=$decoded_res['deviceid'];
+	$payload['apikey']=$this->config['APIKEY'];
+	$payload['error']=0;
+	$payload['userAgent']='app';
+	$payload['sequence']=time()*1000;
+	$payload['withoutTimeout']=true;
+	$jsonstring=json_encode($payload);
+	$sonoffws->send($jsonstring);
+	if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
+	say('Пользователь '.$decoded_res['userName'].' поделился с вами устройством '.$decoded_res['deviceName'].'. Предложение принято в автоматическом режиме.');
+} 
 ?>

@@ -30,9 +30,9 @@
 		if($res[$i]['ID']==$id_online['DEVICE_ID'] && ($id_online['TITLE']=='rssi' || $id_online['TITLE']=='gsm_rssi')) {
 			if($res[$i]['ID']==$id_online['DEVICE_ID'] && $id_online['TITLE']=='rssi') {
 				if ($id_online['VALUE']>= -50) {$res[$i]['RSSI_LVL']=100; $res[$i]['RSSI_COLOR']='#5cb85c';} 
-				elseif ($id_online['VALUE']>= -65) {$res[$i]['RSSI_LVL']=77; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
-				elseif ($id_online['VALUE']>= -80) {$res[$i]['RSSI_LVL']=52; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
-				elseif ($id_online['VALUE']>= -95) {$res[$i]['RSSI_LVL']=26; $res[$i]['RSSI_COLOR']='#d9534f';} 
+				elseif ($id_online['VALUE']>= -61) {$res[$i]['RSSI_LVL']=77; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
+				elseif ($id_online['VALUE']>= -72) {$res[$i]['RSSI_LVL']=52; $res[$i]['RSSI_COLOR']='#f0ad4e';} 
+				elseif ($id_online['VALUE']>= -83) {$res[$i]['RSSI_LVL']=26; $res[$i]['RSSI_COLOR']='#d9534f';} 
 				else {$res[$i]['RSSI_LVL']=0; $res[$i]['RSSI_COLOR']='#d9534f';}
 			}
 		}
