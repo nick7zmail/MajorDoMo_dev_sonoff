@@ -394,7 +394,7 @@ class SonoffWS implements CommonsContract
     /**
      * Tell the socket to close.
      *
-     * @param integer $status http://tools.ietf.org/html/rfc6455#section-7.4
+     * @param integer $status
      * @param string $message A closing message, max 125 bytes.
      * @return bool|null|string
      * @throws BadOpcodeException
