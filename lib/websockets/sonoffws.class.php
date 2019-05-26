@@ -76,7 +76,7 @@ class SonoffWS implements CommonsContract
      * @return string
      * @throws Exception
      */
-    private function getHostUri(string $scheme, string $host): string
+    private function getHostUri(string $scheme, string $host)
     {
         if (in_array($scheme, ['ws', 'wss'], true) === false) {
             throw new Exception(
@@ -124,7 +124,7 @@ class SonoffWS implements CommonsContract
      * @param mixed $urlParts
      * @return string
      */
-    private function getPathWithQuery($urlParts): string
+    private function getPathWithQuery($urlParts)
     {
         $path = isset($urlParts['path']) ? $urlParts['path'] : '/';
         $query = isset($urlParts['query']) ? $urlParts['query'] : '';
@@ -145,7 +145,7 @@ class SonoffWS implements CommonsContract
      * @param array $headers
      * @return string
      */
-    private function getHeaders(string $pathWithQuery, array $headers): string
+    private function getHeaders(string $pathWithQuery, array $headers)
     {
         return 'GET ' . $pathWithQuery . " HTTP/1.1\r\n"
             . implode(
@@ -467,7 +467,7 @@ class SonoffWS implements CommonsContract
      * @param $string
      * @return string
      */
-    public static function sprintB(string $string): string
+    public static function sprintB(string $string)
     {
         $return = '';
         $strLen = strlen($string);
