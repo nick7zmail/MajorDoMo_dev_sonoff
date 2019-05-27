@@ -45,7 +45,7 @@ if($decoded_res['action']=='update' ) {
 				foreach ($val as $devpart) {
 					$need_insert=true;
 					$rec_params['ID']='';	
-					$rec_params['DEVICE_ID']=$rec['ID'];
+					$rec_params['DEVICE_ID']=$id;
 					$rec_params['TITLE']='switch.'.$devpart['outlet'];
 					$rec_params['VALUE']=$devpart['switch'];
 					foreach ($findparams as $findparam) {
@@ -68,7 +68,7 @@ if($decoded_res['action']=='update' ) {
 			if($param=='rfList') {			
 				$need_insert=true;
 				$rec_params['ID']='';	
-				$rec_params['DEVICE_ID']=$rec['ID'];
+				$rec_params['DEVICE_ID']=$id;
 				$rec_params['TITLE']='rfsend';
 				foreach ($findparams as $findparam) {
 					if($rec_params['TITLE']==$findparam['TITLE']) {
