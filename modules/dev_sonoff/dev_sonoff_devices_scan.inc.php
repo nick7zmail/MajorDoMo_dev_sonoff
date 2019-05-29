@@ -30,7 +30,7 @@ if(!$decoded_res['error']){
 			$rec['ID']=$findrec['ID'];
 			SQLUpdate('dev_sonoff_devices', $rec);
 		} else {
-			$rec['ID']='';
+			unset($rec['ID']);
 			$rec['ID']=SQLInsert('dev_sonoff_devices', $rec);
 		}
 		$id=$rec['ID'];
@@ -42,7 +42,7 @@ if(!$decoded_res['error']){
 			$rec_params['TITLE']=$param;
 			$rec_params['VALUE']=$val;
 			$need_insert=true;
-			$rec_params['ID']='';
+			unset($rec_params['ID']);
 			foreach ($findparams as $findparam) {
 				if($rec_params['TITLE']==$findparam['TITLE']) {
 					$need_insert=false;
