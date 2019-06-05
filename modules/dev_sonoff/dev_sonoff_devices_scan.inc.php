@@ -61,7 +61,7 @@ if(!$decoded_res['error']){
 			if($param=='switches') {			
 				foreach ($val as $devpart) {
 					$need_insert=true;
-					$rec_params['ID']='';	
+					unset($rec_params['ID']);	
 					$rec_params['DEVICE_ID']=$rec['ID'];
 					$rec_params['TITLE']='switch.'.$devpart['outlet'];
 					$rec_params['VALUE']=$devpart['switch'];
@@ -84,7 +84,7 @@ if(!$decoded_res['error']){
 			
 			if($param=='rfList') {			
 				$need_insert=true;
-				$rec_params['ID']='';	
+				unset($rec_params['ID']);	
 				$rec_params['DEVICE_ID']=$rec['ID'];
 				$rec_params['TITLE']='rfsend';
 				foreach ($findparams as $findparam) {
@@ -100,7 +100,7 @@ if(!$decoded_res['error']){
 				}
 				
 				$need_insert=true;
-				$rec_params['ID']='';	
+				unset($rec_params['ID']);	
 				$rec_params['DEVICE_ID']=$rec['ID'];
 				$rec_params['TITLE']='rflearn';
 				foreach ($findparams as $findparam) {
