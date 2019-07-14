@@ -22,8 +22,10 @@ echo date("H:i:s") . " running " . basename(__FILE__) . PHP_EOL;
 $latest_check=0;
 $latest_ping=0;
 $latest_http=0;
+$latest_reconnect=0;
 $checkEvery=20;
 $httpEvery=3600;
+$reconnectTime=21600;
 $pingEvery=120;
 //websockets
 $wssurl=$dev_sonoff_module->getWssUrl();
@@ -51,6 +53,25 @@ while (1)
 	if ((time()-$latest_http)>$httpEvery){
 		$dev_sonoff_module->processCycle();
 		$latest_http=time();
+	}
+	//профилактический реконнект
+	if ((time()-$latest_reconnect)>$reconnectTime){
+		if($sonoffws->isConnected()) {
+			$sonoffws->close();
+		}
+		//переподключаемся
+		if($sonoffws->isClosing()==false) {
+			$sonoffws = new SonoffWS($wssurl, $config);
+			$sonoffws->socketUrl=$wssurl;
+			$sonoffws->connect();
+			if($sonoffws->isConnected()) {
+				$dev_sonoff_module->wssInit($sonoffws);
+				$latest_reconnect=time();
+			}
+			if($dev_sonoff_module->config['DEBUG']) {
+				debmes('[wss] ~~~ normal reconnected', 'cycle_dev_sonoff_debug');
+			}			
+		}
 	}
 	//сокеты		
     	if($sonoffws->isConnected()) {
@@ -83,6 +104,9 @@ while (1)
 		$sonoffws->connect();
 		if($sonoffws->isConnected()) {
 			$dev_sonoff_module->wssInit($sonoffws);
+		}
+		if($dev_sonoff_module->config['DEBUG']) {
+			debmes('[wss] ~~~ Cant find socket, reconnecting', 'cycle_dev_sonoff_debug');
 		}
 	}
 //====================================END WSS POLLING================================

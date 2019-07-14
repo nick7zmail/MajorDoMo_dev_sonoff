@@ -170,6 +170,10 @@ class SonoffWS implements CommonsContract
     {
         return $this->isConnected;
     }	
+    public function isClosing()
+    {
+        return $this->isClosing;
+    }	
     public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT)
     {
         if (!$this->isConnected) {
