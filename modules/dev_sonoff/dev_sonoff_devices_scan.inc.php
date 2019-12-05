@@ -53,6 +53,7 @@ if(!$decoded_res['error']){
 		$rec['BRANDNAME']=$device['brandName'];
 		$rec['PRODUCTMODEL']=$device['productModel'];
 		$rec['UIID']=$device['uiid'];
+		$rec['DEVICEKEY']=$device['devicekey'];
 		$findrec=SQLSelectOne("SELECT ID FROM dev_sonoff_devices WHERE DEVICEID='$id'");
 		$rec['UPDATED']=date('Y-m-d H:i:s');
 		if($findrec['ID']) {

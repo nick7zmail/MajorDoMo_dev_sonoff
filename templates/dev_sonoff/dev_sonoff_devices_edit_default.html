@@ -62,6 +62,16 @@
 <!-- UIID (varchar) -->
 <div class="form-group[#if ERR_UIID#] has-error[#endif#]">
  <label for="uiid" class="col-lg-3 control-label">
+ DEVICEKEY:
+ </label>
+ <div class="col-lg-9">
+	<input id="devicekey" name="devicekey" value="[#DEVICEKEY#]" type="hidden" class="form-control">
+	<input value="[#DEVICEKEY#]" type="text" class="form-control" disabled>
+</div>
+</div>
+<!-- UIID (varchar) -->
+<div class="form-group[#if ERR_UIID#] has-error[#endif#]">
+ <label for="uiid" class="col-lg-3 control-label">
  <#LANG_UPDATED#>:
  </label>
  <div class="col-lg-9"><input value="[#UPDATED#]" type="text" class="form-control" disabled></div>

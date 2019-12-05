@@ -584,6 +584,7 @@ dev_sonoff_data -
  dev_sonoff_devices: BRANDNAME varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: PRODUCTMODEL varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: UIID varchar(255) NOT NULL DEFAULT ''
+ dev_sonoff_devices: DEVICEKEY varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: UPDATED datetime
  dev_sonoff_data: ID int(10) unsigned NOT NULL auto_increment
  dev_sonoff_data: TITLE varchar(100) NOT NULL DEFAULT ''
