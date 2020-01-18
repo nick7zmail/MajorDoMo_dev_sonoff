@@ -283,9 +283,9 @@ function usual(&$out) {
    if ($total) {
     for($i=0;$i<$total;$i++) {
 			$dev_id=$properties[$i]['DEVICE_ID'];
-			$device=SQLSelectOne("SELECT DEVICEID FROM dev_sonoff_devices WHERE ID='$dev_id'");
+			$device=SQLSelectOne("SELECT * FROM dev_sonoff_devices WHERE ID='$dev_id'");
 			$param=$properties[$i]['TITLE'];
-			
+		if(!$device['DEVICE_MODE'] || $device['DEVICE_MODE']=='off') {
 			$payload['action']='update';
 			$payload['userAgent']='app';
 			$payload['apikey']=$this->config['APIKEY'];
@@ -333,6 +333,68 @@ function usual(&$out) {
 				}
 			}
 			$sonoffws->close();
+		} elseif($device['DEVICE_MODE']==1) {
+			
+		//================================LAN MODE================================//
+			if ($device['ID']) {
+				$params = array();
+				if ($properties[$i]["TITLE"] == "switch")
+				{
+					 $cmd = "zeroconf/switch";
+					 $params['switch'] = $this->metricsModify($param, $value, 'to_device');
+				}
+				if ($properties[$i]["TITLE"] == "switch.0" ||
+					$properties[$i]["TITLE"] == "switch.1" ||
+					$properties[$i]["TITLE"] == "switch.2" ||
+					$properties[$i]["TITLE"] == "switch.3" )
+				{
+					 $cmd = "zeroconf/switches";
+					 $params['switches'] = array();
+					 $switch = array();
+					 $switch['outlet'] = intval(substr($properties[$i]["TITLE"],6,1));
+					 $switch['switch'] = $this->metricsModify($param, $value, 'to_device');
+					 $params['switches'][] = $switch;
+				}
+				if ($properties[$i]["TITLE"] == "startup") // on off stay
+				{
+					$cmd = "zeroconf/startup";
+					$params['startup'] = $value;
+				}
+				if ($properties[$i]["TITLE"] == "sledOnline") 
+				{
+					$cmd = "zeroconf/sledOnline";
+					$params['sledOnline'] = $this->metricsModify($param, $value, 'to_device');
+				}
+				if ($properties[$i]["TITLE"] == "pulse")
+				{
+					$cmd = "zeroconf/pulse";
+					$table='dev_sonoff_data';
+					$pulseWidth=SQLSelectOne("SELECT * FROM $table WHERE DEVICE_ID=". $device['ID'] ." and TITLE = 'pulseWidth'");
+					
+					$params['pulse'] = $this->metricsModify($param, $value, 'to_device');
+					$params['pulseWidth'] = intval($pulseWidth["VALUE"]);
+				}
+				if ($properties[$i]["TITLE"] == "pulseWidth")
+				{
+					$cmd = "zeroconf/pulse";
+					$table='dev_sonoff_data';
+					$pulse=SQLSelect("SELECT * FROM $table WHERE DEVICE_ID=". $device['ID'] ." and TITLE = 'pulse'");;	
+					$params['pulse'] = $this->metricsModify($param, $pulse["VALUE"], 'to_device');;
+					$params['pulseWidth'] = intval($value);
+				}
+				
+				
+				$res = $this->refDevice($device,$cmd, $params);
+				
+				if ($res["error"] == 1)
+				{
+					$data = array();
+					$data['online'] = '0';
+					$this->updateData($device['MDNS_NAME'],$data);
+				}
+			} 
+		 //================================LAN MODE================================//
+		}
     }
    }
  }
@@ -536,6 +598,335 @@ function usual(&$out) {
 	$resp=json_decode($response, TRUE);
 	return $resp['domain'];
  }
+ 
+ 
+ //================================LAN MODE================================//
+  function processLanCycle($mdns) {
+    $this->getConfig();
+    // Search for devices
+	// For a bit more surety, send multiple search requests
+	//$mdns->query("_ewelink._tcp.local",1,12,"");
+	//$mdns->query("_ewelink._tcp.local",1,16,"");
+	//$mdns->query("_ewelink._tcp.local",1,33,"");
+    $inpacket = $mdns->readIncoming();
+    //print_r ($inpacket);
+    //echo '<br>';
+	//$mdns->printPacket($inpacket);
+    // If our packet has answers, then read them
+	if (sizeof($inpacket->answerrrs)> 0) {
+		for ($x=0; $x < sizeof($inpacket->answerrrs); $x++) {
+            if (strpos($inpacket->answerrrs[$x]->name ,"_ewelink._tcp.local")  === false &&
+                strpos($inpacket->answerrrs[$x]->name ,"eWeLink")  === false)
+                continue;
+            //echo date('Y-m-d H:i:s')." ".$inpacket->answerrrs[$x]->name . "\n";
+            $name = substr($inpacket->answerrrs[$x]->name, 0, strpos($inpacket->answerrrs[$x]->name,'.'));
+            //echo date('Y-m-d H:i:s')." ".$name . "\n";
+			//print_r($inpacket->answerrrs[$x]);
+			//DebMes($inpacket->answerrrs[$x], 'sonoff_diy');
+            // PTR
+			if ($inpacket->answerrrs[$x]->qtype == 12) {
+                if ($inpacket->answerrrs[$x]->name == "_ewelink._tcp.local") {
+					$name = "";
+					for ($y = 0; $y < sizeof($inpacket->answerrrs[$x]->data); $y++) {
+						$nameMDNS .= chr($inpacket->answerrrs[$x]->data[$y]);
+					}
+                    $name = substr($nameMDNS, 0, strpos($nameMDNS,'.'));
+                    //print_r($name);
+					DebMes($name . ' qtype='.$inpacket->answerrrs[$x]->qtype . " nameDns=".$nameMDNS, 'sonoff_lan');
+                    // add device 
+                    $this->updateDevice($name,"","");
+					// Send a a SRV query
+					$mdns->query($nameMDNS, 1, 16, "");
+				}
+			}
+            // TXT data
+            if ($inpacket->answerrrs[$x]->qtype == 16) {
+                //print_r($inpacket->answerrrs[$x]->data);
+                $d = array();
+                for ($y = 0; $y < sizeof($inpacket->answerrrs[$x]->data); $y++) {
+                    $len = $inpacket->answerrrs[$x]->data[$y];
+                    $c = $y;
+                    $kv = false;
+                    $key ="";
+                    $value = "";
+                    ++$y;
+                    while ($y<=$c+$len){
+                        $ch = chr($inpacket->answerrrs[$x]->data[$y]);
+                        if ($ch == '=')
+                            $kv = true;
+                        else {
+                            if (!$kv)
+                                $key .= $ch;
+                            else
+                                $value .= $ch;
+                        }
+                        ++$y;
+                    }
+                    --$y;
+                    $d[$key] = $value;
+                }
+				
+				DebMes($name. " txt=" .json_encode($d), 'sonoff_lan');
+                $this->updateDevice($name,"DEVICEID",$d['id']);
+                $this->updateDevice($name,"UPDATED",date('Y-m-d H:i:s'));
+                                
+                $df = $d['data1'];
+                if (array_key_exists('data2', $d)) $df = $df.$d['data2'];
+                if (array_key_exists('data3', $d)) $df = $df.$d['data3'];
+                
+                //update data device
+                if ($d["encrypt"] == "true")
+                {
+                    $this->updateDevice($name,"DEVICE_MODE",1);
+                    $table_name='dev_sonoff_devices';
+                    $device=SQLSelectOne("SELECT * FROM $table_name WHERE MDNS_NAME='$name'");
+                    $data = json_decode($this->decrypt($device['DEVICEKEY'] ,$d["iv"],$df),true);
+                }
+                else
+                {
+                    $this->updateDevice($name,"DEVICE_MODE",2);
+                    $data = json_decode($df,true);
+                }
+                DebMes($name. " decode=" .json_encode($data), 'sonoff_lan');
+                if ($d["type"] == 'strip')
+				{
+                    foreach ($data['switches'] as $key => $val)
+					{
+						$data['switch'.$val['outlet']] = $val['switch'];
+					}
+					foreach ($data['configure'] as $key => $val)
+					{
+						$data['startup'.$val['outlet']] = $val['startup'];
+					}
+					unset($data['switches']);
+					unset($data['pulses']);
+					unset($data['configure']);
+				}
+                $data["online"] = 1;
+				//print_r($data);
+				DebMes($name. " data=" .json_encode($data), 'sonoff_lan');
+                //DebMes($data, 'sonoff_diy');
+                $this->updateData($name,$data);
+			}
+            // SRV
+			if ($inpacket->answerrrs[$x]->qtype == 33) {
+				$d = $inpacket->answerrrs[$x]->data;
+				$port = ($d[4] * 256) + $d[5];
+				// We need the target from the data
+				$offset = 6;
+				$size = $d[$offset];
+				$offset++;
+				$target = "";
+				for ($z=0; $z < $size; $z++) {
+					$target .= chr($d[$offset + $z]);
+				}
+				$target .= ".local";
+                // update $port device
+				//$port  $target
+                //echo "PORT ".$port." ".  $name."\n";
+				DebMes($name. " port=" .$port, 'sonoff_lan');
+                $this->updateDevice($name,"PORT",$port);
+				// We know the name and port. Send an A query for the IP address
+				$mdns->query($target,1,1,"");
+			}
+            // A
+			if ($inpacket->answerrrs[$x]->qtype == 1) {
+				$d = $inpacket->answerrrs[$x]->data;
+				$ip = $d[0] . "." . $d[1] . "." . $d[2] . "." . $d[3];
+                // update $IP device
+                //echo "IP ".$ip." ".  $name."\n";
+				DebMes($name. " ip=" .$ip, 'sonoff_lan');
+                $this->updateDevice($name,"IP",$ip);
+
+			}
+		}
+	}
+  
+ }
+ function checkLanAlive() {
+    $this->getConfig();
+    $table_name='dev_sonoff_devices';
+    $devices=SQLSelect("SELECT * FROM $table_name");
+    $total=count($devices);
+    for($i=0;$i<$total;$i++) {
+        $cmd = "zeroconf/info";
+        $params = array();
+        $res = $this->refDevice($devices[$i],$cmd,$params);
+        if ($res["error"] == 1)
+        {
+            $data = array();
+            $data['online'] = '0';
+            $data['error'] = $res["data"]["message"];
+            if ($devices[$i]['DEVICE_MODE'] == 1 && $devices[$i]['DEVICEKEY']=='')
+                $data['error'] = $data['error'] . " (maybe wrong device key)";
+            $this->updateData($devices[$i]['MDNS_NAME'],$data);
+        }
+        else
+        {
+            $data = array();
+            $data['online'] = '1';
+            $data['error'] = '';
+            $this->updateData($devices[$i]['MDNS_NAME'],$data);
+        }
+    }
+ }
+ function updateDevice($name, $key, $value)
+ {
+	$table_name='dev_sonoff_devices';
+	//вписываем mdns name, если не вписан
+	if($key=='DEVICEID') {
+		$rec=SQLSelectOne("SELECT * FROM $table_name WHERE $key='$value'");
+		if($rec['MDNS_NAME'] != $name) {
+			$rec['MDNS_NAME'] = $name;
+			SQLUpdate($table_name, $rec);
+		}
+	}
+	//пишем другие параметры
+    $rec=SQLSelectOne("SELECT * FROM $table_name WHERE MDNS_NAME='$name'");
+	if($key=='DEVICE_MODE') {
+		if($rec['DEVICE_MODE']=='off') return;
+	}
+    if ($key!="")
+    {
+        if ($rec[$key] != $value)
+        {
+            $rec[$key] = $value;
+            SQLUpdate($table_name, $rec);
+        }
+    }
+ }
+ 
+ function generate_iv()
+ {
+    $iv = random_bytes(16);
+    return base64_encode($iv);
+ }        
+ 
+ function encrypt($device_key, $iv, $data)
+ {
+    $key = md5($device_key, true);
+    $encodedData = base64_encode(openssl_encrypt($data, 'aes-128-cbc', $key, OPENSSL_RAW_DATA, base64_decode($iv)));
+    return $encodedData;    
+ } 
+ 
+ function decrypt($device_key, $iv, $data)
+ {
+    $key = md5($device_key, true);
+    $decryptedData = openssl_decrypt(base64_decode($data), 'aes-128-cbc', $key, OPENSSL_RAW_DATA, base64_decode($iv));
+    return $decryptedData;
+ }
+ function refDevice($device, $cmd, $params)
+{
+    $ip = $device["IP"];
+    $port = $device["PORT"];
+    
+    $url = "http://$ip:$port/$cmd";
+    
+    DebMes($name. " params=" .json_encode($params), 'sonoff_lan');
+            
+    $data = array();
+    $data['deviceid'] = $device['DEVICEID'];
+    if ($device['DEVICEKEY']!='')
+    {
+        $data['encrypt']=true;
+        $data['sequence']=strval(time());
+        $data['selfApiKey']=$device['DEVICEKEY'];
+        $iv = $this->generate_iv();
+        $data['iv']=$iv;
+        if (empty($params))
+            $str_params = "{}";
+        else
+            $str_params = json_encode($params);
+        $data['data'] = $this->encrypt($device['DEVICEKEY'],$iv,$str_params);
+    }
+    else
+        $data['data'] = $params;
+    
+    return $this->sendRequest($url, $data);
+}
+ 
+function sendRequest($url, $params = 0)
+{
+    try
+    { 
+        $data_string = json_encode($params);
+        $ch = curl_init($url); 
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); 
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($data_string))
+        );
+
+        DebMes('API request - '.$url.' => '. $data_string, 'sonoff_lan');
+        
+        $result = curl_exec($ch);
+        DebMes('API responce - '.$url.' => '. $result, 'sonoff_lan');
+        //echo $result . "\n";
+        if ($result == "")
+        {
+            $result = array();
+            $result["error"] = 1;
+            $result["data"] = array();
+            $result["data"]["message"] = "Empty responce result";
+        }
+        else
+            $result = json_decode($result,true);
+    }
+    catch (Exception $e)
+    {
+		DebMes('API error - '.$url.' => '. get_class($e) . ', ' . $e->getMessage(), 'sonoff_lan');
+        $result = array();
+        $result["error"] = 1;
+        $result["data"] = array();
+        $result["data"]["class"] = get_class($e);
+        $result["data"]["message"] = $e->getMessage();
+    } 
+    return $result;
+}
+ function updateData($name, $data)
+ {
+    $table_name='dev_sonoff_devices';
+    $rec=SQLSelectOne("SELECT * FROM $table_name WHERE MDNS_NAME='$name'");
+    if($rec['DEVICE_MODE']==1) {
+		if ($rec['ID']) {
+			//print_r($rec);
+			$table_name='dev_sonoff_data';
+			$id = $rec['ID'];
+			$values=SQLSelect("SELECT * FROM $table_name WHERE DEVICE_ID='$id'");
+			foreach ($data as $key => $val)
+			{
+				$value_ind = array_search($key, array_column($values, 'TITLE'));
+				if ($value_ind !== False)
+					$value = $values[$value_ind];
+				else
+					$value = array();
+				$value["TITLE"] = $key;
+				$value["DEVICE_ID"] = $rec['ID'];
+				$value["UPDATED"] = date('Y-m-d H:i:s');
+				if ($value['ID']) {
+					if ($value["VALUE"] != $val)
+					{   
+						$value["VALUE"] = $val;
+						SQLUpdate($table_name, $value);
+						if ($value['LINKED_OBJECT'] && $value['LINKED_PROPERTY']) {
+							setGlobal($value['LINKED_OBJECT'] . '.' . $value['LINKED_PROPERTY'], $this->metricsModify($key, $val, 'from_device'), array($this->name => '0'));
+						}
+					}
+				}
+				else{
+					$value["VALUE"] = $val;
+					SQLInsert($table_name, $value);
+				}
+			}
+		}
+	}
+ }
+
+ //================================LAN MODE================================//
 /**
 * Install
 *
@@ -585,6 +976,10 @@ dev_sonoff_data -
  dev_sonoff_devices: PRODUCTMODEL varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: UIID varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: DEVICEKEY varchar(255) NOT NULL DEFAULT ''
+ dev_sonoff_devices: MDNS_NAME varchar(255) NOT NULL DEFAULT ''
+ dev_sonoff_devices: IP varchar(255) NOT NULL DEFAULT ''
+ dev_sonoff_devices: PORT varchar(255) NOT NULL DEFAULT ''
+ dev_sonoff_devices: DEVICE_MODE varchar(255) NOT NULL DEFAULT ''
  dev_sonoff_devices: UPDATED datetime
  dev_sonoff_data: ID int(10) unsigned NOT NULL auto_increment
  dev_sonoff_data: TITLE varchar(100) NOT NULL DEFAULT ''

@@ -58,69 +58,31 @@ if(!$decoded_res['error']){
 		$rec['UPDATED']=date('Y-m-d H:i:s');
 		if($findrec['ID']) {
 			$rec['ID']=$findrec['ID'];
-			SQLUpdate('dev_sonoff_devices', $rec);
+			if(!$findrec['DEVICE_MODE'] || $findrec['DEVICE_MODE']=='off') {
+				SQLUpdate('dev_sonoff_devices', $rec);
+			}
 		} else {
 			unset($rec['ID']);
 			$rec['ID']=SQLInsert('dev_sonoff_devices', $rec);
 		}
-		$id=$rec['ID'];
-		$findparams=SQLSelect("SELECT * FROM dev_sonoff_data WHERE DEVICE_ID='$id'");
-		$device['params']['online']=$device['online'];
-		$device['params']['cmdline']='';
-		foreach($device['params'] as $param=>$val) {
-			$rec_params['DEVICE_ID']=$rec['ID'];
-			$rec_params['TITLE']=$param;
-			$rec_params['VALUE']=$val;
-			$need_insert=true;
-			unset($rec_params['ID']);
-			foreach ($findparams as $findparam) {
-				if($rec_params['TITLE']==$findparam['TITLE']) {
-					$need_insert=false;
-					$rec_params['ID']=$findparam['ID'];
-					if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-						sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'));
-					}
-				}
-			}
-			if($need_insert) {
-				sqlInsert('dev_sonoff_data', $rec_params);
-			} else {
-				SQLUpdate('dev_sonoff_data', $rec_params);
-			}
-			
-			if($param=='switches') {			
-				foreach ($val as $devpart) {
-					$need_insert=true;
-					unset($rec_params['ID']);	
-					$rec_params['DEVICE_ID']=$rec['ID'];
-					$rec_params['TITLE']='switch.'.$devpart['outlet'];
-					$rec_params['VALUE']=$devpart['switch'];
-					foreach ($findparams as $findparam) {
-						if($rec_params['TITLE']==$findparam['TITLE']) {
-							$need_insert=false;
-							$rec_params['ID']=$findparam['ID'];
-							if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-								sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($rec_params['TITLE'], $devpart['switch'], 'from_device'), array($this->name => '0'));
-							}
-						}
-					}
-					if($need_insert) {
-						sqlInsert('dev_sonoff_data', $rec_params);
-					} else {
-						SQLUpdate('dev_sonoff_data', $rec_params);
-					}
-				}
-			}
-			
-			if($param=='rfList') {			
-				$need_insert=true;
-				unset($rec_params['ID']);	
+		if(!$findrec['DEVICE_MODE'] || $findrec['DEVICE_MODE']=='off') {
+			$id=$rec['ID'];
+			$findparams=SQLSelect("SELECT * FROM dev_sonoff_data WHERE DEVICE_ID='$id'");
+			$device['params']['online']=$device['online'];
+			$device['params']['cmdline']='';
+			foreach($device['params'] as $param=>$val) {
 				$rec_params['DEVICE_ID']=$rec['ID'];
-				$rec_params['TITLE']='rfsend';
+				$rec_params['TITLE']=$param;
+				$rec_params['VALUE']=$val;
+				$need_insert=true;
+				unset($rec_params['ID']);
 				foreach ($findparams as $findparam) {
 					if($rec_params['TITLE']==$findparam['TITLE']) {
 						$need_insert=false;
 						$rec_params['ID']=$findparam['ID'];
+						if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
+							sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'));
+						}
 					}
 				}
 				if($need_insert) {
@@ -129,23 +91,65 @@ if(!$decoded_res['error']){
 					SQLUpdate('dev_sonoff_data', $rec_params);
 				}
 				
-				$need_insert=true;
-				unset($rec_params['ID']);	
-				$rec_params['DEVICE_ID']=$rec['ID'];
-				$rec_params['TITLE']='rflearn';
-				foreach ($findparams as $findparam) {
-					if($rec_params['TITLE']==$findparam['TITLE']) {
-						$need_insert=false;
-						$rec_params['ID']=$findparam['ID'];
+				if($param=='switches') {			
+					foreach ($val as $devpart) {
+						$need_insert=true;
+						unset($rec_params['ID']);	
+						$rec_params['DEVICE_ID']=$rec['ID'];
+						$rec_params['TITLE']='switch.'.$devpart['outlet'];
+						$rec_params['VALUE']=$devpart['switch'];
+						foreach ($findparams as $findparam) {
+							if($rec_params['TITLE']==$findparam['TITLE']) {
+								$need_insert=false;
+								$rec_params['ID']=$findparam['ID'];
+								if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
+									sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($rec_params['TITLE'], $devpart['switch'], 'from_device'), array($this->name => '0'));
+								}
+							}
+						}
+						if($need_insert) {
+							sqlInsert('dev_sonoff_data', $rec_params);
+						} else {
+							SQLUpdate('dev_sonoff_data', $rec_params);
+						}
 					}
 				}
-				if($need_insert) {
-					sqlInsert('dev_sonoff_data', $rec_params);
-				} else {
-					SQLUpdate('dev_sonoff_data', $rec_params);
+				
+				if($param=='rfList') {			
+					$need_insert=true;
+					unset($rec_params['ID']);	
+					$rec_params['DEVICE_ID']=$rec['ID'];
+					$rec_params['TITLE']='rfsend';
+					foreach ($findparams as $findparam) {
+						if($rec_params['TITLE']==$findparam['TITLE']) {
+							$need_insert=false;
+							$rec_params['ID']=$findparam['ID'];
+						}
+					}
+					if($need_insert) {
+						sqlInsert('dev_sonoff_data', $rec_params);
+					} else {
+						SQLUpdate('dev_sonoff_data', $rec_params);
+					}
+					
+					$need_insert=true;
+					unset($rec_params['ID']);	
+					$rec_params['DEVICE_ID']=$rec['ID'];
+					$rec_params['TITLE']='rflearn';
+					foreach ($findparams as $findparam) {
+						if($rec_params['TITLE']==$findparam['TITLE']) {
+							$need_insert=false;
+							$rec_params['ID']=$findparam['ID'];
+						}
+					}
+					if($need_insert) {
+						sqlInsert('dev_sonoff_data', $rec_params);
+					} else {
+						SQLUpdate('dev_sonoff_data', $rec_params);
+					}
 				}
+				
 			}
-			
 		}
 	}
 

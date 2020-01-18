@@ -118,6 +118,5 @@ while (1)
 	  $sonoffws->close();
       exit;
    }
-   sleep(1);
 }
 DebMes("Unexpected close of cycle: " . basename(__FILE__));

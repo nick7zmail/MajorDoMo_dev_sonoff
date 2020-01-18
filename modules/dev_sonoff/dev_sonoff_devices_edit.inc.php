@@ -29,7 +29,8 @@
    $rec['PRODUCTMODEL']=gr('productmodel');
   //updating 'UIID' (varchar)
    $rec['UIID']=gr('uiid');
-
+   $rec['DEVICE_MODE']=gr('device_mode');
+   
    global $updated_date;
    global $updated_minutes;
    global $updated_hours;

@@ -76,6 +76,56 @@
  </label>
  <div class="col-lg-9"><input value="[#UPDATED#]" type="text" class="form-control" disabled></div>
 </div>
+[#if MDNS_NAME!=""#]
+ [#if DEVICE_MODE=="1"#]
+ <div class="alert alert-info" role="alert">LAN режим активен</div>
+ [#endif DEVICE_MODE#]
+  [#if DEVICE_MODE=="off"#]
+ <div class="alert alert-warning" role="alert">Доступен LAN режим</div>
+ [#endif DEVICE_MODE#]
+<div class="form-group">
+ <label class="control-label">
+ LAN Mode:
+ </label>
+	<div class="btn-group controls" style="margin-left:0px" data-toggle="buttons">
+		<label class="btn [#if DEVICE_MODE=="1"#]btn-primary[#else#]btn-default[#endif#]">
+			<input type="radio" name="device_mode" value="1" [#if DEVICE_MODE=="1"#] checked[#endif#]> <#LANG_ON#>
+		</label>
+		<label class="btn [#if DEVICE_MODE=="off"#]btn-primary[#else#]btn-default[#endif#]">
+			<input type="radio" name="device_mode" value="off" [#if DEVICE_MODE=="off"#] checked[#endif#]> <#LANG_OFF#>
+		</label>
+	</div>
+</div> 
+
+<div class="form-group">
+ <label for="mdns_name" class="col-lg-3 control-label">
+ MDNS_NAME:
+ </label>
+ <div class="col-lg-9">
+	<input id="mdns_name" name="mdns_name" value="[#MDNS_NAME#]" type="hidden" class="form-control">
+	<input value="[#MDNS_NAME#]" type="text" class="form-control" disabled>
+</div>
+</div>
+<div class="form-group">
+ <label for="ip" class="col-lg-3 control-label">
+ IP:
+ </label>
+ <div class="col-lg-9">
+	<input id="ip" name="mdns_name" value="[#IP#]" type="hidden" class="form-control">
+	<input value="[#IP#]" type="text" class="form-control" disabled>
+</div>
+</div>
+<div class="form-group">
+ <label for="port" class="col-lg-3 control-label">
+ PORT:
+ </label>
+ <div class="col-lg-9">
+	<input id="port" name="mdns_name" value="[#PORT#]" type="hidden" class="form-control">
+	<input value="[#PORT#]" type="text" class="form-control" disabled>
+</div>
+</div>
+ [#endif MDNS_NAME#]
+
 
 <div class="form-group">
         <div class="col-lg-offset-3 col-lg-4">

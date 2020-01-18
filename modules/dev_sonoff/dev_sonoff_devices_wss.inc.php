@@ -15,7 +15,8 @@ if($decoded_res['action']=='update' ) {
 	$rec['DEVICEID']=$device['deviceid'];
 	$id=$device['deviceid'];
 	$findrec=SQLSelectOne("SELECT ID FROM dev_sonoff_devices WHERE DEVICEID='$id'");
-	if($findrec['ID']) {
+	
+	if($findrec['ID'] && (!$findrec['DEVICE_MODE'] || $findrec['DEVICE_MODE']=='off')) {
 	$rec['UPDATED']=date('Y-m-d H:i:s');
 	SQLUpdate('dev_sonoff_devices', $rec);
 	$id=$findrec['ID'];

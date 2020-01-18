@@ -69,6 +69,13 @@
     <div class="panel [#if ONLINE!=""#]panel-success[#else#]panel-danger[#endif#]">
         <div class="panel-heading">
           <div style="float:right;" class="dropdown">
+		    [#if MDNS_NAME!=""#]
+			[#if DEVICE_MODE==1#]
+				<span class="label label-primary">LAN</span> 
+			[#else#]		    
+				<span class="label label-warning">LAN</span> 
+			[#endif DEVICE_MODE#]
+			[#endif MDNS_NAME#]
             <a href="?data_source=<#DATA_SOURCE#>&view_mode=edit_dev_sonoff_devices&id=[#ID#]&tab=data" class="btn btn-default btn-round" title="Data">
               <span class="glyphicon glyphicon-list"></span>
             </a>
@@ -83,6 +90,7 @@
             </ul>             
           </div>
           <h3 class="panel-title">[#TITLE#]</h3>
+
         </div>
       <div class="panel-content">
 			  [#if ONLINE!=""#]
