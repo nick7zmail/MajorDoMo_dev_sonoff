@@ -351,7 +351,7 @@ function usual(&$out) {
 					 $cmd = "zeroconf/switches";
 					 $params['switches'] = array();
 					 $switch = array();
-					 $switch['outlet'] = intval(substr($properties[$i]["TITLE"],6,1));
+					 $switch['outlet'] = intval(substr($properties[$i]["TITLE"],-1));
 					 $switch['switch'] = $this->metricsModify($param, $value, 'to_device');
 					 $params['switches'][] = $switch;
 				}
@@ -987,6 +987,7 @@ dev_sonoff_data -
  dev_sonoff_data: DEVICE_ID int(10) NOT NULL DEFAULT '0'
  dev_sonoff_data: LINKED_OBJECT varchar(100) NOT NULL DEFAULT ''
  dev_sonoff_data: LINKED_PROPERTY varchar(100) NOT NULL DEFAULT ''
+ dev_sonoff_devices: UPDATED datetime
 EOD;
   parent::dbInstall($data);
  }
