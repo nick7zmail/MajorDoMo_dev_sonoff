@@ -987,7 +987,7 @@ dev_sonoff_data -
  dev_sonoff_data: DEVICE_ID int(10) NOT NULL DEFAULT '0'
  dev_sonoff_data: LINKED_OBJECT varchar(100) NOT NULL DEFAULT ''
  dev_sonoff_data: LINKED_PROPERTY varchar(100) NOT NULL DEFAULT ''
- dev_sonoff_devices: UPDATED datetime
+ dev_sonoff_data: UPDATED datetime
 EOD;
   parent::dbInstall($data);
  }
