@@ -690,7 +690,7 @@ function usual(&$out) {
 				{
                     foreach ($data['switches'] as $key => $val)
 					{
-						$data['switch'.$val['outlet']] = $val['switch'];
+						$data['switch.'.$val['outlet']] = $val['switch'];
 					}
 					foreach ($data['configure'] as $key => $val)
 					{
