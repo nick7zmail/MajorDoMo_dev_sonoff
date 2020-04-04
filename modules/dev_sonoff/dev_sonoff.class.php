@@ -340,20 +340,20 @@ function usual(&$out) {
 				$params = array();
 				if ($properties[$i]["TITLE"] == "switch")
 				{
-					 $cmd = "zeroconf/switch";
-					 $params['switch'] = $this->metricsModify($param, $value, 'to_device');
+					$cmd = "zeroconf/switch";
+					$params['switch'] = $this->metricsModify($param, $value, 'to_device');
+					$params['mainSwitch'] = $this->metricsModify($param, $value, 'to_device');
+					$params['deviceType'] = 'normal';
+					 
 				}
 				if ($properties[$i]["TITLE"] == "switch.0" ||
 					$properties[$i]["TITLE"] == "switch.1" ||
 					$properties[$i]["TITLE"] == "switch.2" ||
 					$properties[$i]["TITLE"] == "switch.3" )
 				{
-					 $cmd = "zeroconf/switches";
-					 $params['switches'] = array();
-					 $switch = array();
-					 $switch['outlet'] = intval(substr($properties[$i]["TITLE"],-1));
-					 $switch['switch'] = $this->metricsModify($param, $value, 'to_device');
-					 $params['switches'][] = $switch;
+					$cmd = "zeroconf/switches";
+					$params['switches']['outlet'] = intval(substr($properties[$i]["TITLE"],6,1));
+					$params['switches']['switch'] = $this->metricsModify($param, $value, 'to_device');
 				}
 				if ($properties[$i]["TITLE"] == "startup") // on off stay
 				{
@@ -370,7 +370,6 @@ function usual(&$out) {
 					$cmd = "zeroconf/pulse";
 					$table='dev_sonoff_data';
 					$pulseWidth=SQLSelectOne("SELECT * FROM $table WHERE DEVICE_ID=". $device['ID'] ." and TITLE = 'pulseWidth'");
-					
 					$params['pulse'] = $this->metricsModify($param, $value, 'to_device');
 					$params['pulseWidth'] = intval($pulseWidth["VALUE"]);
 				}
@@ -388,7 +387,6 @@ function usual(&$out) {
 				
 				if ($res["error"] == 1)
 				{
-					$data = array();
 					$data['online'] = '0';
 					$this->updateData($device['MDNS_NAME'],$data);
 				}
