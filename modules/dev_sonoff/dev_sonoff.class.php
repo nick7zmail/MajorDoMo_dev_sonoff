@@ -352,8 +352,9 @@ function usual(&$out) {
 					$properties[$i]["TITLE"] == "switch.3" )
 				{
 					$cmd = "zeroconf/switches";
-					$params['switches']['outlet'] = intval(substr($properties[$i]["TITLE"],6,1));
-					$params['switches']['switch'] = $this->metricsModify($param, $value, 'to_device');
+				    $switch['outlet'] = intval(substr($properties[$i]["TITLE"],-1));
+					$switch['switch'] = $this->metricsModify($param, $value, 'to_device');
+					$params['switches'][] = $switch;
 				}
 				if ($properties[$i]["TITLE"] == "startup") // on off stay
 				{
