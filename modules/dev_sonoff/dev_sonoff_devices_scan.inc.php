@@ -8,7 +8,7 @@ $this->getConfig();
 	//бъем на массивы
 	$app_arr=explode(',', $appid_str);
 	$key_arr=explode(',', $key_str);
-	$dict_arr=str_split($dict_str);	
+	$dict_arr=str_split($dict_str);
 	//сдвигаем биты
 	foreach($key_arr as $key=>$byte) {
 		$key_arr[$key]=($byte >> 2);
@@ -23,11 +23,11 @@ $this->getConfig();
     $indexes2_arr = explode(',', $indexes2_str);
 	//ищем индексы в словаре
 	foreach($indexes_arr as $index) {$crypt_key.= $dict_arr[$index];}
-	foreach($indexes2_arr as $index) {$appid.= $dict_arr[$index];}	
+	foreach($indexes2_arr as $index) {$appid.= $dict_arr[$index];}
 	include_once("./lib/websockets/sonoffws.class.php");
 	$sonoffws = new SonoffWS($wssurl, $config);
 	$nonce=$sonoffws->generateKey(8, false);
-	
+
 //. '?lang=en&apiKey=' . $this->config['APIKEY'] . '&version=' . $this->config['VERSION'] . '&ts=' . time() . '&nonce=' . $this->sonoffws->generateKey(8, false) . '&appid=' . $appid . '&os=' . $this->config['OS'] . '&model=' . $this->config['MODEL'] . '&romVersion=' . $this->config['ROMVERSION'] . '&appVersion=' . $this->config['APKVERSION']
 $host='https://'.$this->config['HTTPS_API_URL'].':8080/api/user/device'. '?lang=en&apiKey=' . $this->config['APIKEY'] . '&version=' . $this->config['VERSION'] . '&ts=' . time() . '&nonce=' . $nonce . '&appid=' . $appid . '&os=' . $this->config['OS'] . '&model=' . $this->config['MODEL'] . '&romVersion=' . $this->config['ROMVERSION'] . '&appVersion=' . $this->config['APKVERSION'];
 $ch = curl_init();
@@ -39,7 +39,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array(
  'GET /api/user/device HTTP/1.1',
  'Authorization: Bearer '.$this->config['TOKEN'],
  'Content-Type: application/json'
-)); 
+));
 $response = curl_exec($ch);
 curl_close($ch);
 if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
@@ -81,7 +81,7 @@ if(!$decoded_res['error']){
 						$need_insert=false;
 						$rec_params['ID']=$findparam['ID'];
 						if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-							sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'));
+							sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($param, $val, 'from_device'), array($this->name => '0'), '[https] Cloud cycle');
 						}
 					}
 				}
@@ -90,11 +90,11 @@ if(!$decoded_res['error']){
 				} else {
 					SQLUpdate('dev_sonoff_data', $rec_params);
 				}
-				
-				if($param=='switches') {			
+
+				if($param=='switches') {
 					foreach ($val as $devpart) {
 						$need_insert=true;
-						unset($rec_params['ID']);	
+						unset($rec_params['ID']);
 						$rec_params['DEVICE_ID']=$rec['ID'];
 						$rec_params['TITLE']='switch.'.$devpart['outlet'];
 						$rec_params['VALUE']=$devpart['switch'];
@@ -103,7 +103,7 @@ if(!$decoded_res['error']){
 								$need_insert=false;
 								$rec_params['ID']=$findparam['ID'];
 								if(isset($findparam['LINKED_OBJECT']) && isset($findparam['LINKED_PROPERTY'])) {
-									sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($rec_params['TITLE'], $devpart['switch'], 'from_device'), array($this->name => '0'));
+									sg($findparam['LINKED_OBJECT'].'.'.$findparam['LINKED_PROPERTY'], $this->metricsModify($rec_params['TITLE'], $devpart['switch'], 'from_device'), array($this->name => '0'), '[https] Cloud cycle (2+ch)');
 								}
 							}
 						}
@@ -114,10 +114,10 @@ if(!$decoded_res['error']){
 						}
 					}
 				}
-				
-				if($param=='rfList') {			
+
+				if($param=='rfList') {
 					$need_insert=true;
-					unset($rec_params['ID']);	
+					unset($rec_params['ID']);
 					$rec_params['DEVICE_ID']=$rec['ID'];
 					$rec_params['TITLE']='rfsend';
 					foreach ($findparams as $findparam) {
@@ -131,9 +131,9 @@ if(!$decoded_res['error']){
 					} else {
 						SQLUpdate('dev_sonoff_data', $rec_params);
 					}
-					
+
 					$need_insert=true;
-					unset($rec_params['ID']);	
+					unset($rec_params['ID']);
 					$rec_params['DEVICE_ID']=$rec['ID'];
 					$rec_params['TITLE']='rflearn';
 					foreach ($findparams as $findparam) {
@@ -148,7 +148,7 @@ if(!$decoded_res['error']){
 						SQLUpdate('dev_sonoff_data', $rec_params);
 					}
 				}
-				
+
 			}
 		}
 	}

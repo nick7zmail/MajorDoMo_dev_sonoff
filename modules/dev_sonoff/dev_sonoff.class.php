@@ -1,6 +1,6 @@
 <?php
 /**
-* Sonoff 
+* Sonoff
 * @package project
 * @author Wizard <sergejey@gmail.com>
 * @copyright http://majordomo.smartliving.ru/ (c)
@@ -138,21 +138,21 @@ function admin(&$out) {
 
  if ($this->view_mode=='update_settings') {
 	$api_url = "";
-	
+
    if(gr('login')) {
 	   $login=$this->loginAuth(gr('login'), gr('pass'));
 	   $at=$login['at'];
 	   $reg=$login['region'];
 	   $api_url = "$reg-api.coolkit.cc";
 	   $this->config['WSS_API_URL']=$this->getWssSrv($reg, $at);
-	   
+
    } else {
 	   $api_url=gr('https_api_url');
 	   $this->config['WSS_API_URL']=gr('wss_api_url');
    }
    $this->config['EMAIL']=gr('login');
    $this->config['PASS']=gr('pass');
-   
+
    if($at) {
 	   $this->config['TOKEN']=$at;
    } else {
@@ -245,7 +245,7 @@ function usual(&$out) {
  function edit_dev_sonoff_devices(&$out, $id) {
   require(DIR_MODULES.$this->name.'/dev_sonoff_devices_edit.inc.php');
  }
- 
+
  function share_dev_sonoff_devices(&$out, $id) {
   require(DIR_MODULES.$this->name.'/dev_sonoff_devices_share.inc.php');
  }
@@ -305,7 +305,7 @@ function usual(&$out) {
 			} else {
 				$payload['params'][$param]=$this->metricsModify($param, $value, 'to_device');
 			}
-			$payload['sequence']=time()*1000;	
+			$payload['sequence']=time()*1000;
 			$jsonstring=json_encode($payload);
 			if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
 			if(isset($this->sonoffws)) {
@@ -315,7 +315,7 @@ function usual(&$out) {
 					} catch (BadOpcodeException $e) {
 						echo 'Couldn`t sent: ' . $e->getMessage();
 					}
-				}				
+				}
 			} else {
 				include_once("./lib/websockets/sonoffws.class.php");
 				$wssurl=$this->getWssUrl();
@@ -334,7 +334,7 @@ function usual(&$out) {
 			}
 			$sonoffws->close();
 		} elseif($device['DEVICE_MODE']==1) {
-			
+
 		//================================LAN MODE================================//
 			if ($device['ID']) {
 				$params = array();
@@ -344,7 +344,7 @@ function usual(&$out) {
 					$params['switch'] = $this->metricsModify($param, $value, 'to_device');
 					$params['mainSwitch'] = $this->metricsModify($param, $value, 'to_device');
 					$params['deviceType'] = 'normal';
-					 
+
 				}
 				if ($properties[$i]["TITLE"] == "switch.0" ||
 					$properties[$i]["TITLE"] == "switch.1" ||
@@ -361,7 +361,7 @@ function usual(&$out) {
 					$cmd = "zeroconf/startup";
 					$params['startup'] = $value;
 				}
-				if ($properties[$i]["TITLE"] == "sledOnline") 
+				if ($properties[$i]["TITLE"] == "sledOnline")
 				{
 					$cmd = "zeroconf/sledOnline";
 					$params['sledOnline'] = $this->metricsModify($param, $value, 'to_device');
@@ -378,34 +378,34 @@ function usual(&$out) {
 				{
 					$cmd = "zeroconf/pulse";
 					$table='dev_sonoff_data';
-					$pulse=SQLSelect("SELECT * FROM $table WHERE DEVICE_ID=". $device['ID'] ." and TITLE = 'pulse'");;	
+					$pulse=SQLSelect("SELECT * FROM $table WHERE DEVICE_ID=". $device['ID'] ." and TITLE = 'pulse'");;
 					$params['pulse'] = $this->metricsModify($param, $pulse["VALUE"], 'to_device');;
 					$params['pulseWidth'] = intval($value);
 				}
-				
-				
+
+
 				$res = $this->refDevice($device,$cmd, $params);
-				
+
 				if ($res["error"] == 1)
 				{
 					$data['online'] = '0';
 					$this->updateData($device['MDNS_NAME'],$data);
 				}
-			} 
+			}
 		 //================================LAN MODE================================//
 		}
     }
    }
  }
- 
+
  function processCycle() {
 	$this->dev_sonoff_devices_cloudscan();
  }
  function wssRecv($recv, $sonoffws) {
-	$this->dev_sonoff_devices_wss($recv, $sonoffws); 
+	$this->dev_sonoff_devices_wss($recv, $sonoffws);
  }
- 
- 
+
+
  function getWssUrl() {
 	$this->getConfig();
 	$url='wss://'.$this->config['WSS_API_URL'].':8080/api/ws';
@@ -415,7 +415,7 @@ function usual(&$out) {
 	 $this->sonoffws=$sonoffws;
 	 $this->wssGreatings();
  }
-  
+
  function wssGreatings() {
 	$this->getConfig();
 	$payload['action']='userOnline';
@@ -429,7 +429,7 @@ function usual(&$out) {
 	$payload['ts']=time();
 	$payload['model']= $this->config['MODEL'];
 	$payload['romVersion']=$this->config['ROMVERSION'];
-	$payload['sequence']=time()*1000;	
+	$payload['sequence']=time()*1000;
 	$jsonstring=json_encode($payload);
 	if($this->config['DEBUG']) debmes('[wss] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
 	if($this->sonoffws->isConnected()) {
@@ -439,22 +439,22 @@ function usual(&$out) {
             echo 'Couldn`t sent: ' . $e->getMessage();
         }
 	}
-	
+
  }
- 
+
  function metricsModify($param, $val, $out) {
-	if($out=='to_device') { 
+	if($out=='to_device') {
 		if((strpos($param, 'switch')!==false || $param=='sledOnline') && $param!='switches') {
 			$val=($val)? 'on' : 'off';
-		} 
+		}
 	} elseif($out=='from_device') {
 		if((strpos($param, 'switch')!==false || $param=='sledOnline') && $param!='switches') {
 			$val=($val=='on')? 1 : 0;
-		} 
+		}
 	}
 	return $val;
  }
- 
+
  function deviceRename($device) {
 	$devid=$device['DEVICEID'];
 	$this->getConfig();
@@ -468,12 +468,12 @@ function usual(&$out) {
 	$payload['model']= $this->config['MODEL'];
 	$payload['romVersion']=$this->config['ROMVERSION'];
 	$payload['apkVesrion']=$this->config['APKVERSION'];
-	
+
 	include_once("./lib/websockets/sonoffws.class.php");
 	$sonoffws = new SonoffWS($wssurl, $config);
 	$payload['nonce']=$sonoffws->generateKey(8, false);
 	$jsonstring=json_encode($payload);
-	
+
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $host);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -482,7 +482,7 @@ function usual(&$out) {
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 	 "POST /api/user/device/$devid HTTP/1.1",
 	 'Authorization: Bearer '.$this->config['TOKEN'],
-	 'Content-Type: application/json',  
+	 'Content-Type: application/json',
 	 'Content-Length: ' . strlen($jsonstring)
 	));
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
@@ -490,9 +490,9 @@ function usual(&$out) {
 	curl_close($ch);
 	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
 	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
-	
+
  }
- 
+
  function loginAuth($login, $pass) {
 	$this->getConfig();
 	$host='https://api.coolkit.cc:8080/api/user/login';
@@ -503,7 +503,7 @@ function usual(&$out) {
 	//бъем на массивы
 	$app_arr=explode(',', $appid_str);
 	$key_arr=explode(',', $key_str);
-	$dict_arr=str_split($dict_str);	
+	$dict_arr=str_split($dict_str);
 	//сдвигаем биты
 	foreach($key_arr as $key=>$byte) {
 		$key_arr[$key]=($byte >> 2);
@@ -518,7 +518,7 @@ function usual(&$out) {
     $indexes2_arr = explode(',', $indexes2_str);
 	//ищем индексы в словаре
 	foreach($indexes_arr as $index) {$crypt_key.= $dict_arr[$index];}
-	foreach($indexes2_arr as $index) {$appid.= $dict_arr[$index];}	
+	foreach($indexes2_arr as $index) {$appid.= $dict_arr[$index];}
 	//формируем запрос
 	$payload['password']=$pass;
 	$payload['email']=$login;
@@ -529,7 +529,7 @@ function usual(&$out) {
 	$payload['romVersion']=$this->config['ROMVERSION'];
 	$payload['apkVesrion']=$this->config['APKVERSION'];
 	$payload['appid']=$appid;
-	
+
 	//генерация nonce
 	include_once("./lib/websockets/sonoffws.class.php");
 	$sonoffws = new SonoffWS($wssurl, $config);
@@ -546,18 +546,18 @@ function usual(&$out) {
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 	 'POST /api/user/login HTTP/1.1',
 	 "Authorization: Sign $sign",
-	 'Content-Type: application/json',  
+	 'Content-Type: application/json',
 	 'Content-Length: ' . strlen($jsonstring)
 	));
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
 	$response = curl_exec($ch);
 	curl_close($ch);
 	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
-	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');	 
-	$json_resp=json_decode($response, TRUE);	
+	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
+	$json_resp=json_decode($response, TRUE);
 	return $json_resp;
  }
- 
+
  function getWssSrv($reg, $at) {
 	$this->getConfig();
 	$host="https://$reg-disp.coolkit.cc:8080/dispatch/app";
@@ -570,8 +570,8 @@ function usual(&$out) {
 	 'POST /dispatch/app HTTP/1.1',
 	 "Authorization: Bearer $at",
 	 'Content-Type: application/json'
-	)); 
-	
+	));
+
 	$payload['accept']=$pass;
 	$payload['email']=$login;
 	$payload['version']=$this->config['VERSION'];
@@ -586,19 +586,19 @@ function usual(&$out) {
 	include_once("./lib/websockets/sonoffws.class.php");
 	$sonoffws = new SonoffWS($wssurl, $config);
 	$payload['nonce']=$sonoffws->generateKey(8, false);
-	$jsonstring=json_encode($payload);	
+	$jsonstring=json_encode($payload);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonstring);
 	$response = curl_exec($ch);
-	curl_close($ch);	 
-	
+	curl_close($ch);
+
 	if($this->config['DEBUG']) debmes('[http] --- '.$jsonstring, 'cycle_dev_sonoff_debug');
 	if($this->config['DEBUG']) debmes('[http] +++ '.$response, 'cycle_dev_sonoff_debug');
-	
+
 	$resp=json_decode($response, TRUE);
 	return $resp['domain'];
  }
- 
- 
+
+
  //================================LAN MODE================================//
   function processLanCycle($mdns) {
     $this->getConfig();
@@ -632,7 +632,7 @@ function usual(&$out) {
                     $name = substr($nameMDNS, 0, strpos($nameMDNS,'.'));
                     //print_r($name);
 					DebMes($name . ' qtype='.$inpacket->answerrrs[$x]->qtype . " nameDns=".$nameMDNS, 'sonoff_lan');
-                    // add device 
+                    // add device
                     $this->updateDevice($name,"","");
 					// Send a a SRV query
 					$mdns->query($nameMDNS, 1, 16, "");
@@ -664,15 +664,15 @@ function usual(&$out) {
                     --$y;
                     $d[$key] = $value;
                 }
-				
+
 				DebMes($name. " txt=" .json_encode($d), 'sonoff_lan');
                 $this->updateDevice($name,"DEVICEID",$d['id']);
                 $this->updateDevice($name,"UPDATED",date('Y-m-d H:i:s'));
-                                
+
                 $df = $d['data1'];
                 if (array_key_exists('data2', $d)) $df = $df.$d['data2'];
                 if (array_key_exists('data3', $d)) $df = $df.$d['data3'];
-                
+
                 //update data device
                 if ($d["encrypt"] == "true")
                 {
@@ -740,7 +740,7 @@ function usual(&$out) {
 			}
 		}
 	}
-  
+
  }
  function checkLanAlive() {
     $this->getConfig();
@@ -794,20 +794,20 @@ function usual(&$out) {
         }
     }
  }
- 
+
  function generate_iv()
  {
     $iv = random_bytes(16);
     return base64_encode($iv);
- }        
- 
+ }
+
  function encrypt($device_key, $iv, $data)
  {
     $key = md5($device_key, true);
     $encodedData = base64_encode(openssl_encrypt($data, 'aes-128-cbc', $key, OPENSSL_RAW_DATA, base64_decode($iv)));
-    return $encodedData;    
- } 
- 
+    return $encodedData;
+ }
+
  function decrypt($device_key, $iv, $data)
  {
     $key = md5($device_key, true);
@@ -818,11 +818,11 @@ function usual(&$out) {
 {
     $ip = $device["IP"];
     $port = $device["PORT"];
-    
+
     $url = "http://$ip:$port/$cmd";
-    
+
     DebMes($name. " params=" .json_encode($params), 'sonoff_lan');
-            
+
     $data = array();
     $data['deviceid'] = $device['DEVICEID'];
     if ($device['DEVICEKEY']!='')
@@ -840,20 +840,20 @@ function usual(&$out) {
     }
     else
         $data['data'] = $params;
-    
+
     return $this->sendRequest($url, $data);
 }
- 
+
 function sendRequest($url, $params = 0)
 {
     try
-    { 
+    {
         $data_string = json_encode($params);
-        $ch = curl_init($url); 
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
@@ -861,7 +861,7 @@ function sendRequest($url, $params = 0)
         );
 
         DebMes('API request - '.$url.' => '. $data_string, 'sonoff_lan');
-        
+
         $result = curl_exec($ch);
         DebMes('API responce - '.$url.' => '. $result, 'sonoff_lan');
         //echo $result . "\n";
@@ -883,7 +883,7 @@ function sendRequest($url, $params = 0)
         $result["data"] = array();
         $result["data"]["class"] = get_class($e);
         $result["data"]["message"] = $e->getMessage();
-    } 
+    }
     return $result;
 }
  function updateData($name, $data)
@@ -908,11 +908,11 @@ function sendRequest($url, $params = 0)
 				$value["UPDATED"] = date('Y-m-d H:i:s');
 				if ($value['ID']) {
 					if ($value["VALUE"] != $val)
-					{   
+					{
 						$value["VALUE"] = $val;
 						SQLUpdate($table_name, $value);
 						if ($value['LINKED_OBJECT'] && $value['LINKED_PROPERTY']) {
-							setGlobal($value['LINKED_OBJECT'] . '.' . $value['LINKED_PROPERTY'], $this->metricsModify($key, $val, 'from_device'), array($this->name => '0'));
+							setGlobal($value['LINKED_OBJECT'] . '.' . $value['LINKED_PROPERTY'], $this->metricsModify($key, $val, 'from_device'), array($this->name => '0'), '[udp] Lan cycle');
 						}
 					}
 				}
@@ -964,8 +964,8 @@ function sendRequest($url, $params = 0)
 */
  function dbInstall($data) {
 /*
-dev_sonoff_devices - 
-dev_sonoff_data - 
+dev_sonoff_devices -
+dev_sonoff_data -
 */
   $data = <<<EOD
  dev_sonoff_devices: ID int(10) unsigned NOT NULL auto_increment
