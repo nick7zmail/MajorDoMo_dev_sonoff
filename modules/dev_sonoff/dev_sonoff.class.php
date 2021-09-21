@@ -382,6 +382,12 @@ function usual(&$out) {
 					$params['pulse'] = $this->metricsModify($param, $pulse["VALUE"], 'to_device');;
 					$params['pulseWidth'] = intval($value);
 				}
+				if ($properties[$i]["TITLE"] == "rfsend")
+				{
+					$cmd = "zeroconf/transmit";
+					$params['cmd'] = 'transmit';
+					$params['rfChl'] = intval($value);
+				}
 
 
 				$res = $this->refDevice($device,$cmd, $params);
