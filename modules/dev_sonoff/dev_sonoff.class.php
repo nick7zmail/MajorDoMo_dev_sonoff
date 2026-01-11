@@ -618,8 +618,8 @@ function usual(&$out) {
     //echo '<br>';
 	//$mdns->printPacket($inpacket);
     // If our packet has answers, then read them
-	if (sizeof($inpacket->answerrrs)> 0) {
-		for ($x=0; $x < sizeof($inpacket->answerrrs); $x++) {
+	if (isset($inpacket->answerrrs) && is_array($inpacket->answerrrs) && count($inpacket->answerrrs) > 0) {
+		for ($x=0; $x < count($inpacket->answerrrs); $x++) {
             if (strpos($inpacket->answerrrs[$x]->name ,"_ewelink._tcp.local")  === false &&
                 strpos($inpacket->answerrrs[$x]->name ,"eWeLink")  === false)
                 continue;
@@ -632,24 +632,30 @@ function usual(&$out) {
 			if ($inpacket->answerrrs[$x]->qtype == 12) {
                 if ($inpacket->answerrrs[$x]->name == "_ewelink._tcp.local") {
 					$name = "";
-					for ($y = 0; $y < sizeof($inpacket->answerrrs[$x]->data); $y++) {
-						$nameMDNS .= chr($inpacket->answerrrs[$x]->data[$y]);
+					$nameMDNS = "";
+					if (isset($inpacket->answerrrs[$x]->data) && is_array($inpacket->answerrrs[$x]->data)) {
+						for ($y = 0; $y < count($inpacket->answerrrs[$x]->data); $y++) {
+							$nameMDNS .= chr($inpacket->answerrrs[$x]->data[$y]);
+						}
 					}
-                    $name = substr($nameMDNS, 0, strpos($nameMDNS,'.'));
-                    //print_r($name);
-					DebMes($name . ' qtype='.$inpacket->answerrrs[$x]->qtype . " nameDns=".$nameMDNS, 'sonoff_lan');
-                    // add device
-                    $this->updateDevice($name,"","");
-					// Send a a SRV query
-					$mdns->query($nameMDNS, 1, 16, "");
+					if ($nameMDNS != "") {
+						$name = substr($nameMDNS, 0, strpos($nameMDNS,'.'));
+						//print_r($name);
+						DebMes($name . ' qtype='.$inpacket->answerrrs[$x]->qtype . " nameDns=".$nameMDNS, 'sonoff_lan');
+						// add device
+						$this->updateDevice($name,"","");
+						// Send a a SRV query
+						$mdns->query($nameMDNS, 1, 16, "");
+					}
 				}
 			}
             // TXT data
             if ($inpacket->answerrrs[$x]->qtype == 16) {
                 //print_r($inpacket->answerrrs[$x]->data);
                 $d = array();
-                for ($y = 0; $y < sizeof($inpacket->answerrrs[$x]->data); $y++) {
-                    $len = $inpacket->answerrrs[$x]->data[$y];
+                if (isset($inpacket->answerrrs[$x]->data) && is_array($inpacket->answerrrs[$x]->data)) {
+                    for ($y = 0; $y < count($inpacket->answerrrs[$x]->data); $y++) {
+                        $len = $inpacket->answerrrs[$x]->data[$y];
                     $c = $y;
                     $kv = false;
                     $key ="";
@@ -669,6 +675,7 @@ function usual(&$out) {
                     }
                     --$y;
                     $d[$key] = $value;
+                    }
                 }
 
 				DebMes($name. " txt=" .json_encode($d), 'sonoff_lan');
